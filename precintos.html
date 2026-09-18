@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Precintos | PreviCheck</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="precintos.css">
+    <link rel="icon" href="imagenes/logotipo.png" type="image">
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('previcheck-tema') || 'dark');</script>
+</head>
+<body>
+    <header>
+        <div class="logo-section">
+            <div class="logo-container"><img src="imagenes/logo.png" alt="PreviCheck" class="logo-img"></div>
+            <span class="sub-title">| Control de Precintos</span>
+        </div>
+        <div class="header-acciones">
+            <a href="index.html" class="btn-header btn-header-inicio">🏠 Inicio</a>
+            <a href="capacitaciones.html" class="btn-header">⬅️ Página Principal</a>
+        </div>
+    </header>
+
+    <h2 class="main-title">Control de Precintos</h2>
+
+    <div class="tabs-cctv">
+        <button type="button" id="tabResumen" class="tab-boton tab-activo" onclick="mostrarVista('resumen')">📊 Resumen</button>
+        <button type="button" id="tabDetalle" class="tab-boton" onclick="mostrarVista('detalle')">📋 Detalle</button>
+        <div class="filtro-anio-container">
+            <label for="filtroAnio">Año:</label>
+            <select id="filtroAnio" class="form-control select-anio" onchange="aplicarFiltrosYRenderizar()">
+                <option value="todos">Todos los años</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- ===================== VISTA RESUMEN ===================== -->
+    <div id="vistaResumen" class="vista-cctv">
+
+        <div class="kpi-container-4">
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--neutro">🚚</div>
+                <div>
+                    <span class="kpi-label">Total de Despachos</span>
+                    <h4 id="kpiTotalDespachos" class="kpi-valor kpi-valor--neutro">0</h4>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--azul">🔒</div>
+                <div>
+                    <span class="kpi-label">Total Precintos Usados</span>
+                    <h4 id="kpiTotalPrecintos" class="kpi-valor kpi-valor--azul">0</h4>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--rojo">↩️</div>
+                <div>
+                    <span class="kpi-label">Devoluciones Registradas</span>
+                    <h4 id="kpiDevoluciones" class="kpi-valor kpi-valor--rojo">0</h4>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--verde">📍</div>
+                <div>
+                    <span class="kpi-label">Destino Más Frecuente</span>
+                    <h4 id="kpiDestinoTop" class="kpi-valor kpi-valor--verde kpi-valor-texto">—</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="graficas-grid">
+            <div class="grafica-card grafica-card-ancha">
+                <h3 class="titulo-grafica">Cantidad de Precintos por Mes</h3>
+                <div class="grafica-canvas-wrap"><canvas id="graficoPrecintosPorMes"></canvas></div>
+            </div>
+            <div class="grafica-card">
+                <h3 class="titulo-grafica">Despachos por Destino (Provincias)</h3>
+                <div class="grafica-canvas-wrap"><canvas id="graficoDestino"></canvas></div>
+            </div>
+            <div class="grafica-card">
+                <h3 class="titulo-grafica">Despachos por Almacén (CD)</h3>
+                <div class="grafica-canvas-wrap"><canvas id="graficoAlmacen"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== VISTA DETALLE ===================== -->
+    <div id="vistaDetalle" class="vista-cctv vista-oculta">
+
+        <div class="panel-formulario-caso" data-solo-editor="ocultar">
+            <h3 class="titulo-formulario">Registrar / Editar Despacho</h3>
+            <form id="formPrecinto" onsubmit="guardarPrecinto(event); return false;">
+                <input type="hidden" id="editId" value="">
+
+                <div class="grid-formulario">
+                    <div class="form-group">
+                        <label>Fecha</label>
+                        <input type="date" id="fecha" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Hora</label>
+                        <input type="time" id="hora" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>CD / Almacén</label>
+                        <input type="text" id="cdAlmacen" class="form-control" list="listaAlmacenes" placeholder="Ej: RAMCOD" required>
+                        <datalist id="listaAlmacenes">
+                            <option value="RAMCOD">
+                            <option value="CJ">
+                            <option value="EXACTA">
+                            <option value="KADILSA">
+                            <option value="SAMA">
+                            <option value="ALELPAT">
+                            <option value="HERMANOS ANGULO">
+                            <option value="LOBITOS">
+                            <option value="BLUEDRAGON">
+                            <option value="MULTISERVICIOS">
+                            <option value="HBC">
+                            <option value="No especificado">
+                        </datalist>
+                    </div>
+                    <div class="form-group">
+                        <label>Placa</label>
+                        <input type="text" id="placa" class="form-control" placeholder="Ej: BCM-772" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Conductor / Personal</label>
+                        <input type="text" id="conductor" class="form-control" placeholder="Nombre completo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>N° Precintos Totales</label>
+                        <input type="number" id="precintosTotales" class="form-control" min="0" placeholder="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Precintos Laterales (rango)</label>
+                        <input type="text" id="precintosLaterales" class="form-control" placeholder="Ej: 66335-66338">
+                    </div>
+                    <div class="form-group">
+                        <label>Precintos Posteriores (rango)</label>
+                        <input type="text" id="precintosPosteriores" class="form-control" placeholder="Ej: 66337-66338">
+                    </div>
+                    <div class="form-group">
+                        <label>Color</label>
+                        <select id="color" class="form-control">
+                            <option value="NARANJA">Naranja</option>
+                            <option value="AZUL">Azul</option>
+                            <option value="VERDE">Verde</option>
+                            <option value="ROJO">Rojo</option>
+                            <option value="AMARILLO">Amarillo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Destino</label>
+                        <div class="destino-input-row">
+                            <select id="destino" class="form-control" required></select>
+                            <button type="button" class="btn-sm btn-edit btn-gestionar-destinos" onclick="abrirModalDestinos()" data-solo-editor="ocultar" title="Gestionar destinos">⚙️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Operación</label>
+                        <select id="operacion" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Encargado de Prevención</label>
+                        <select id="encargado" class="form-control" required></select>
+                    </div>
+                </div>
+
+                <button type="submit" id="btnSubmitPrecinto" class="btn-action">Registrar Despacho</button>
+            </form>
+        </div>
+
+        <div class="barra-filtros-detalle">
+            <input type="text" id="filtroTextoDetalle" class="form-control input-filtro-texto" placeholder="Buscar por placa, conductor o almacén..." oninput="renderizarTablaDetalleFiltrada()">
+            <select id="filtroDestinoDetalle" class="form-control select-filtro" onchange="renderizarTablaDetalleFiltrada()"></select>
+            <select id="filtroOperacionDetalle" class="form-control select-filtro" onchange="renderizarTablaDetalleFiltrada()"></select>
+        </div>
+
+        <div class="table-scroll-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>CD/Almacén</th>
+                        <th>Placa</th>
+                        <th>Conductor</th>
+                        <th>Total</th>
+                        <th>Laterales</th>
+                        <th>Posteriores</th>
+                        <th>Color</th>
+                        <th>Destino</th>
+                        <th>Operación</th>
+                        <th>Encargado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyPrecintos">
+                    <tr><td colspan="14" class="empty-state">Cargando despachos…</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL — Gestionar destinos -->
+    <div id="modalDestinos" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Gestionar Destinos</h3>
+                <span class="close-modal" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalDestinos()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cerrarModalDestinos()}">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group-inline">
+                    <input type="text" id="inputNuevoDestino" class="form-control" placeholder="Nuevo destino (ej: LIMA NORTE)" onkeydown="if(event.key==='Enter'){event.preventDefault(); agregarDestino();}">
+                    <button type="button" class="btn btn-primary" onclick="agregarDestino()">Agregar</button>
+                </div>
+                <ul class="lista-modal-docs" id="listaDestinosModal"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="errores.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let precintosCache = [];
+        let destinosCache = [];
+        let charts = {};
+
+        // Tema oscuro para Chart.js: texto y líneas de cuadrícula claras sobre fondo oscuro
+        // Colores de Chart.js — leídos de las variables de tema para que cambien con el interruptor claro/oscuro
+        function actualizarColoresChart() {
+            const estilos = getComputedStyle(document.documentElement);
+            Chart.defaults.color = estilos.getPropertyValue('--text-muted').trim() || '#8aa0c2';
+            Chart.defaults.borderColor = estilos.getPropertyValue('--chart-grid').trim() || 'rgba(255, 255, 255, 0.08)';
+        }
+        actualizarColoresChart();
+        window.addEventListener('previcheck:tema-cambiado', () => {
+            actualizarColoresChart();
+            aplicarFiltrosYRenderizar();
+        });
+
+        const OPERACIONES = ['DESPACHO', 'TRANSFERENCIA', 'DEVOLUCIONES'];
+        const ENCARGADOS = ['Ana Flores', 'Eduardo Solano', 'José Hernandez', 'Jhonny Teran', 'Flor Lopez', 'Agente ISEG'];
+
+        function poblarSelectsEstaticos() {
+            document.getElementById('operacion').innerHTML =
+                '<option value="">-- Seleccionar --</option>' +
+                OPERACIONES.map(o => `<option value="${o}">${o}</option>`).join('');
+
+            document.getElementById('encargado').innerHTML =
+                '<option value="">-- Seleccionar --</option>' +
+                ENCARGADOS.map(e => `<option value="${e}">${e}</option>`).join('');
+
+            document.getElementById('filtroOperacionDetalle').innerHTML =
+                '<option value="todos">Todas las operaciones</option>' +
+                OPERACIONES.map(o => `<option value="${o}">${o}</option>`).join('');
+        }
+
+        /* ---------- Destinos: lista editable ---------- */
+        async function cargarOpcionesDestino() {
+            destinosCache = await listarOpcionesDestino();
+            poblarSelectsDestino();
+        }
+
+        function poblarSelectsDestino() {
+            const opciones = destinosCache.map(d => `<option value="${d.valor}">${d.valor}</option>`).join('');
+            const valorDestino = document.getElementById('destino').value;
+            const valorFiltro = document.getElementById('filtroDestinoDetalle').value;
+
+            document.getElementById('destino').innerHTML = '<option value="">-- Seleccionar --</option>' + opciones;
+            document.getElementById('filtroDestinoDetalle').innerHTML = '<option value="todos">Todos los destinos</option>' + opciones;
+
+            if (destinosCache.some(d => d.valor === valorDestino)) document.getElementById('destino').value = valorDestino;
+            if (valorFiltro && destinosCache.some(d => d.valor === valorFiltro)) document.getElementById('filtroDestinoDetalle').value = valorFiltro;
+        }
+
+        function abrirModalDestinos() {
+            renderizarListaDestinosModal();
+            document.getElementById('modalDestinos').style.display = 'flex';
+        }
+
+        function cerrarModalDestinos() {
+            document.getElementById('modalDestinos').style.display = 'none';
+        }
+
+        function renderizarListaDestinosModal() {
+            const ul = document.getElementById('listaDestinosModal');
+            if (destinosCache.length === 0) {
+                ul.innerHTML = '<li class="empty-state">Aún no hay destinos registrados.</li>';
+                return;
+            }
+            ul.innerHTML = destinosCache.map(d => `
+                <li>
+                    <span>${d.valor}</span>
+                    <button type="button" class="btn-sm btn-delete" onclick="eliminarDestino(${d.id})" aria-label="Eliminar destino ${d.valor}">🗑️</button>
+                </li>
+            `).join('');
+        }
+
+        async function agregarDestino() {
+            const input = document.getElementById('inputNuevoDestino');
+            const valor = input.value.trim().toUpperCase();
+            if (!valor) { mostrarAviso('Escribe un nombre de destino.', 'advertencia'); return; }
+
+            if (await agregarOpcionDestino(valor)) {
+                input.value = '';
+                mostrarAviso('Destino agregado.', 'exito');
+                await cargarOpcionesDestino();
+                renderizarListaDestinosModal();
+            }
+        }
+
+        async function eliminarDestino(id) {
+            if (!confirm('¿Eliminar este destino de la lista? Los despachos ya guardados con ese destino no se modifican.')) return;
+            if (await eliminarOpcionDestino(id)) {
+                mostrarAviso('Destino eliminado.', 'exito');
+                await cargarOpcionesDestino();
+                renderizarListaDestinosModal();
+            }
+        }
+
+        /* ---------- Guardar / editar / eliminar ---------- */
+        async function guardarPrecinto(e) {
+            if (!validarCamposRequeridos(['fecha', 'cdAlmacen', 'placa', 'conductor', 'precintosTotales', 'destino', 'operacion', 'encargado'])) return;
+            if (!estaEnLinea()) { mostrarAviso('No hay conexión a internet. Espera a que vuelva la señal.', 'error'); return; }
+
+            const editId = document.getElementById('editId').value;
+            const registro = {
+                fecha: document.getElementById('fecha').value,
+                hora: document.getElementById('hora').value || null,
+                cd_almacen: document.getElementById('cdAlmacen').value.trim(),
+                placa: document.getElementById('placa').value.trim().toUpperCase(),
+                conductor: document.getElementById('conductor').value.trim(),
+                precintos_totales: parseInt(document.getElementById('precintosTotales').value) || 0,
+                precintos_laterales: document.getElementById('precintosLaterales').value.trim(),
+                precintos_posteriores: document.getElementById('precintosPosteriores').value.trim(),
+                color: document.getElementById('color').value,
+                destino: document.getElementById('destino').value,
+                operacion: document.getElementById('operacion').value,
+                encargado: document.getElementById('encargado').value
+            };
+
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            registro.creado_por = user ? user.id : null;
+
+            const btn = document.getElementById('btnSubmitPrecinto');
+            const textoOriginalBtn = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Guardando…';
+            const ok = await guardarPrecintoRemoto(registro, editId ? parseInt(editId) : null);
+            btn.disabled = false;
+            btn.textContent = textoOriginalBtn;
+            if (!ok) return;
+
+            mostrarAviso(editId ? 'Despacho actualizado correctamente.' : 'Despacho registrado correctamente.', 'exito');
+            resetearFormulario();
+            await cargarYRenderizarTodo();
+        }
+
+        function editarPrecinto(id) {
+            const p = precintosCache.find(x => x.id === id);
+            if (!p) { mostrarAviso('Ese registro ya no existe. Actualizando…', 'advertencia'); cargarYRenderizarTodo(); return; }
+
+            mostrarVista('detalle');
+            document.getElementById('editId').value = id;
+            document.getElementById('fecha').value = p.fecha;
+            document.getElementById('hora').value = p.hora || '';
+            document.getElementById('cdAlmacen').value = p.cd_almacen || '';
+            document.getElementById('placa').value = p.placa;
+            document.getElementById('conductor').value = p.conductor;
+            document.getElementById('precintosTotales').value = p.precintos_totales;
+            document.getElementById('precintosLaterales').value = p.precintos_laterales || '';
+            document.getElementById('precintosPosteriores').value = p.precintos_posteriores || '';
+            document.getElementById('color').value = p.color || 'NARANJA';
+            document.getElementById('destino').value = p.destino || '';
+            document.getElementById('operacion').value = p.operacion;
+            document.getElementById('encargado').value = p.encargado;
+
+            const btn = document.getElementById('btnSubmitPrecinto');
+            btn.textContent = 'Actualizar Despacho';
+            btn.classList.add('btn-mode-update');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function eliminarPrecinto(id) {
+            if (!confirm('¿Eliminar este registro definitivamente?')) return;
+            const ok = await eliminarPrecintoRemoto(id);
+            if (!ok) return;
+            mostrarAviso('Registro eliminado.', 'exito');
+            await cargarYRenderizarTodo();
+        }
+
+        function resetearFormulario() {
+            document.getElementById('formPrecinto').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('fecha').valueAsDate = new Date();
+            document.getElementById('color').value = 'NARANJA';
+            const btn = document.getElementById('btnSubmitPrecinto');
+            btn.textContent = 'Registrar Despacho';
+            btn.classList.remove('btn-mode-update');
+        }
+
+        /* ---------- Tabs ---------- */
+        function mostrarVista(vista) {
+            document.getElementById('vistaResumen').classList.toggle('vista-oculta', vista !== 'resumen');
+            document.getElementById('vistaDetalle').classList.toggle('vista-oculta', vista !== 'detalle');
+            document.getElementById('tabResumen').classList.toggle('tab-activo', vista === 'resumen');
+            document.getElementById('tabDetalle').classList.toggle('tab-activo', vista === 'detalle');
+        }
+
+        /* ---------- Filtros y agregaciones ---------- */
+        function obtenerAniosDisponibles(lista) {
+            const anios = new Set(lista.map(p => (p.fecha || '').slice(0, 4)).filter(Boolean));
+            return Array.from(anios).sort().reverse();
+        }
+
+        function filtrarPorAnio(lista, anio) {
+            if (anio === 'todos') return lista;
+            return lista.filter(p => (p.fecha || '').startsWith(anio));
+        }
+
+        function calcularEstadisticas(lista) {
+            const totalDespachos = lista.length;
+            const totalPrecintos = lista.reduce((acc, p) => acc + (Number(p.precintos_totales) || 0), 0);
+            const devoluciones = lista.filter(p => p.operacion === 'DEVOLUCIONES').length;
+
+            const conteoDestino = {};
+            lista.forEach(p => { if (p.destino) conteoDestino[p.destino] = (conteoDestino[p.destino] || 0) + 1; });
+            let destinoTop = '—';
+            let max = 0;
+            Object.entries(conteoDestino).forEach(([d, c]) => { if (c > max) { max = c; destinoTop = d; } });
+
+            return { totalDespachos, totalPrecintos, devoluciones, destinoTop };
+        }
+
+        function agruparPorMes(lista, campoValor) {
+            const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            const valores = new Array(12).fill(0);
+            lista.forEach(p => {
+                if (!p.fecha) return;
+                const mes = parseInt(p.fecha.slice(5, 7), 10) - 1;
+                if (mes >= 0 && mes < 12) valores[mes] += campoValor ? (Number(p[campoValor]) || 0) : 1;
+            });
+            return { meses, valores };
+        }
+
+        function agruparPorCampo(lista, campo, limite) {
+            const conteo = {};
+            lista.forEach(p => { if (p[campo]) conteo[p[campo]] = (conteo[p[campo]] || 0) + 1; });
+            const entradas = Object.entries(conteo).sort((a, b) => b[1] - a[1]);
+            return limite ? entradas.slice(0, limite) : entradas;
+        }
+
+        /* ---------- Gráficas ---------- */
+        function destruirCharts() {
+            Object.values(charts).forEach(ch => ch && ch.destroy());
+            charts = {};
+        }
+
+        function renderizarGraficas(lista) {
+            destruirCharts();
+
+            const { meses } = agruparPorMes(lista, null);
+            const { valores: precintosPorMes } = agruparPorMes(lista, 'precintos_totales');
+            const PROVINCIAS_DESTINO = ['CHICLAYO', 'AREQUIPA', 'CHIMBOTE', 'PIURA', 'ICA', 'CAJAMARCA', 'HUANCAYO', 'TRUJILLO', 'CUSCO'];
+            const soloProvincias = lista.filter(p => PROVINCIAS_DESTINO.includes(p.destino));
+            const porDestino = agruparPorCampo(soloProvincias, 'destino', 9);
+            const porAlmacen = agruparPorCampo(lista, 'cd_almacen', 8);
+
+            charts.precintosPorMes = new Chart(document.getElementById('graficoPrecintosPorMes'), {
+                type: 'line',
+                data: {
+                    labels: meses,
+                    datasets: [{
+                        label: 'Precintos usados',
+                        data: precintosPorMes,
+                        borderColor: '#1f8bc9',
+                        backgroundColor: 'rgba(31, 139, 201, 0.18)',
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#1f8bc9',
+                        pointRadius: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+
+            charts.destino = new Chart(document.getElementById('graficoDestino'), {
+                type: 'pie',
+                data: {
+                    labels: porDestino.map(d => d[0]),
+                    datasets: [{
+                        data: porDestino.map(d => d[1]),
+                        backgroundColor: ['#16a34a', '#1f8bc9', '#f59e0b', '#e21f7a', '#7c3aed', '#0d9488', '#94a3b8', '#fbbf24', '#4ade80']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+
+            charts.almacen = new Chart(document.getElementById('graficoAlmacen'), {
+                type: 'bar',
+                data: {
+                    labels: porAlmacen.map(a => a[0]),
+                    datasets: [{ label: 'Despachos', data: porAlmacen.map(a => a[1]), backgroundColor: '#1f8bc9', borderRadius: 4 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
+            });
+        }
+
+        function actualizarKPIs(stats) {
+            document.getElementById('kpiTotalDespachos').textContent = stats.totalDespachos;
+            document.getElementById('kpiTotalPrecintos').textContent = stats.totalPrecintos;
+            document.getElementById('kpiDevoluciones').textContent = stats.devoluciones;
+            document.getElementById('kpiDestinoTop').textContent = stats.destinoTop;
+        }
+
+        /* ---------- Detalle (tabla) ---------- */
+        function renderizarTablaDetalle(lista) {
+            const tbody = document.getElementById('tbodyPrecintos');
+            tbody.innerHTML = '';
+            if (lista.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="14" class="empty-state">No hay despachos que coincidan con los filtros.</td></tr>`;
+                return;
+            }
+            const permiteEdicion = !esLector();
+            lista.forEach((p, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${i + 1}</td>
+                    <td>${p.fecha || ''}</td>
+                    <td>${p.hora || '—'}</td>
+                    <td>${p.cd_almacen || '—'}</td>
+                    <td>${p.placa}</td>
+                    <td>${p.conductor}</td>
+                    <td>${p.precintos_totales}</td>
+                    <td>${p.precintos_laterales || '—'}</td>
+                    <td>${p.precintos_posteriores || '—'}</td>
+                    <td>${p.color || '—'}</td>
+                    <td>${p.destino || '—'}</td>
+                    <td>${p.operacion}</td>
+                    <td>${p.encargado}</td>
+                    <td>
+                        ${permiteEdicion ? `
+                            <button class="btn-sm btn-edit" onclick="editarPrecinto(${p.id})" aria-label="Editar despacho">✏️</button>
+                            <button class="btn-sm btn-delete" onclick="eliminarPrecinto(${p.id})" aria-label="Eliminar despacho">🗑️</button>
+                        ` : '<span class="texto-solo-lectura">Solo lectura</span>'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderizarTablaDetalleFiltrada() {
+            const texto = document.getElementById('filtroTextoDetalle').value.toLowerCase().trim();
+            const destinoFiltro = document.getElementById('filtroDestinoDetalle').value;
+            const operacionFiltro = document.getElementById('filtroOperacionDetalle').value;
+            const anio = document.getElementById('filtroAnio').value;
+
+            let lista = filtrarPorAnio(precintosCache, anio);
+            lista = lista.filter(p => {
+                const coincideTexto = !texto || [p.placa, p.conductor, p.cd_almacen].join(' ').toLowerCase().includes(texto);
+                const coincideDestino = destinoFiltro === 'todos' || p.destino === destinoFiltro;
+                const coincideOperacion = operacionFiltro === 'todos' || p.operacion === operacionFiltro;
+                return coincideTexto && coincideDestino && coincideOperacion;
+            });
+
+            renderizarTablaDetalle(lista);
+        }
+
+        /* ---------- Orquestador general ---------- */
+        function poblarSelectorAnio(lista) {
+            const select = document.getElementById('filtroAnio');
+            const anioActual = select.value || 'todos';
+            const anios = obtenerAniosDisponibles(lista);
+            select.innerHTML = '<option value="todos">Todos los años</option>' +
+                anios.map(a => `<option value="${a}">${a}</option>`).join('');
+            if (anios.includes(anioActual)) select.value = anioActual;
+        }
+
+        function aplicarFiltrosYRenderizar() {
+            const anio = document.getElementById('filtroAnio').value;
+            const listaAnio = filtrarPorAnio(precintosCache, anio);
+            actualizarKPIs(calcularEstadisticas(listaAnio));
+            renderizarGraficas(listaAnio);
+            renderizarTablaDetalleFiltrada();
+        }
+
+        async function cargarYRenderizarTodo() {
+            precintosCache = await listarPrecintos();
+            poblarSelectorAnio(precintosCache);
+            aplicarFiltrosYRenderizar();
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const session = await exigirSesion();
+            if (!session) return;
+            poblarSelectsEstaticos();
+            await cargarOpcionesDestino();
+            document.getElementById('fecha').valueAsDate = new Date();
+            await cargarYRenderizarTodo();
+        });
+    </script>
+</body>
+</html>

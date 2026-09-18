@@ -1,0 +1,197 @@
+:root {
+    --primary-color: #e21f7a;
+    --secondary-color: #1c2540;
+    --accent-color: #1f8bc9;
+    --background-color: #0b1220;
+    --card-background: #141b2e;
+    --text-color: #cbd5e1;
+    --title-color: #f1f5f9;
+    --border-color: #2a3550;
+    --hover-color: rgba(255, 255, 255, 0.04);
+    --input-bg: #0f1626;
+    --surface-2: #101a2e;
+    --chip-bg: #1c2540;
+    --chip-hover: #263156;
+    --text-muted: #8aa0c2;
+    --badge-verde-bg: rgba(34, 197, 94, 0.15);
+    --badge-verde-text: #4ade80;
+    --badge-rojo-bg: rgba(239, 68, 68, 0.15);
+    --badge-rojo-text: #f87171;
+}
+
+[data-theme="light"] {
+    --secondary-color: #e2e8f0;
+    --background-color: #f1f5f9;
+    --card-background: #ffffff;
+    --text-color: #334155;
+    --title-color: #0f172a;
+    --border-color: #cbd5e1;
+    --hover-color: #f8fafc;
+    --input-bg: #ffffff;
+    --surface-2: #f8fafc;
+    --chip-bg: #e2e8f0;
+    --chip-hover: #cbd5e1;
+    --text-muted: #64748b;
+    --badge-verde-bg: #dcfce7;
+    --badge-verde-text: #16a34a;
+    --badge-rojo-bg: #fee2e2;
+    --badge-rojo-text: #dc2626;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+header {
+    background-color: var(--card-background);
+    padding: 15px 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border-color);
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.logo-container {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+}
+
+.logo-container img {
+    height: 40px;
+    object-fit: contain;
+}
+
+.sub-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--title-color);
+}
+
+.btn-header {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.btn-header:hover {
+    background-color: #15679a;
+}
+
+.main-title {
+    font-size: 20px;
+    color: var(--title-color);
+    margin-bottom: 5px;
+}
+
+.dashboard-container {
+    display: grid;
+    gap: 20px;
+}
+
+.panel-right {
+    background-color: var(--card-background);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color);
+    overflow-x: auto;
+}
+
+.form-control {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    background-color: var(--input-bg);
+    color: var(--title-color);
+}
+
+.form-control:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(31, 139, 201, 0.2);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    text-align: left;
+    font-size: 13px;
+}
+
+th, td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    background-color: var(--surface-2);
+    color: var(--title-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+
+tbody tr:hover {
+    background-color: var(--hover-color);
+}
+
+input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent-color);
+}
+
+.btn-sm {
+    background-color: var(--chip-bg);
+    color: var(--title-color);
+    border: none;
+    padding: 5px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.btn-sm:hover {
+    background-color: var(--chip-hover);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-muted);
+    font-style: italic;
+}

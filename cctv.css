@@ -1,0 +1,223 @@
+/* ==========================================================
+   ESTILOS — cctv.html (seguimiento de casos de seguridad)
+   ========================================================== */
+
+.header-acciones {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-header-inicio {
+    background-color: #475569;
+}
+
+/* ----- Tabs ----- */
+.tabs-cctv {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.tab-boton {
+    padding: 9px 18px;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-color);
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.tab-boton.tab-activo {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+.filtro-anio-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--title-color);
+}
+
+.select-anio {
+    width: 140px;
+    margin-bottom: 0;
+}
+
+.vista-oculta {
+    display: none;
+}
+
+/* ----- KPIs ----- */
+.kpi-container-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 22px;
+}
+
+.kpi-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.kpi-icono {
+    font-size: 28px;
+    padding: 10px;
+    border-radius: 6px;
+}
+.kpi-icono--neutro { background: var(--chip-bg); }
+.kpi-icono--verde   { background: var(--badge-verde-bg); color: var(--badge-verde-text); }
+.kpi-icono--rojo    { background: var(--badge-rojo-bg); color: var(--badge-rojo-text); }
+.kpi-icono--azul    { background: var(--badge-azul-bg); color: var(--badge-azul-text); }
+
+.kpi-label {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.kpi-valor {
+    font-size: 20px;
+    font-weight: 700;
+}
+.kpi-valor--neutro { color: var(--title-color); }
+.kpi-valor--verde   { color: #16a34a; }
+.kpi-valor--rojo    { color: #dc2626; }
+.kpi-valor--azul    { color: #0284c7; }
+
+/* ----- Gráficas: 2 columnas x 2 filas -----
+   Fila 1: Casos por Mes | Costos por Mes
+   Fila 2: Tipo de Resolución | Casos por Operador */
+.graficas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.grafica-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    height: 340px;
+}
+
+.grafica-canvas-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+}
+
+.titulo-grafica {
+    font-size: 14px;
+    color: var(--title-color);
+    margin-bottom: 12px;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* ----- Formulario de nueva solicitud ----- */
+.panel-formulario-caso {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    padding: 22px;
+    margin-bottom: 20px;
+}
+
+.titulo-formulario {
+    font-size: 15px;
+    color: var(--title-color);
+    margin-bottom: 16px;
+}
+
+.grid-formulario {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.campo-ancho {
+    grid-column: 1 / -1;
+}
+
+/* ----- Filtros de la tabla detalle ----- */
+.barra-filtros-detalle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.input-filtro-texto {
+    flex: 1;
+    min-width: 220px;
+    margin-bottom: 0;
+}
+
+.select-filtro {
+    width: 220px;
+    margin-bottom: 0;
+}
+
+.texto-solo-lectura {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+/* ----- Diferenciador de solicitantes "CT" ----- */
+.badge-ct {
+    display: inline-block;
+    background: var(--badge-amarillo-bg);
+    color: var(--badge-amarillo-text);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    margin-left: 6px;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
+/* ----- Modal de resumen: botón para abrir OneDrive ----- */
+.btn-abrir-onedrive {
+    display: inline-flex;
+    margin-top: 14px;
+    text-decoration: none;
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .graficas-grid { grid-template-columns: 1fr; }
+    .grid-formulario { grid-template-columns: 1fr 1fr; }
+    .grafica-card { height: 300px; }
+}
+
+@media (max-width: 640px) {
+    .kpi-container-4 { grid-template-columns: 1fr 1fr; }
+    .grid-formulario { grid-template-columns: 1fr; }
+    .filtro-anio-container { margin-left: 0; }
+}

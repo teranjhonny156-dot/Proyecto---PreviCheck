@@ -1,0 +1,179 @@
+/* ==========================================================
+   ESTILOS — index.html (Portal de Seguridad: login + menú)
+   Usa las variables de tema (claro/oscuro) ya definidas en
+   styles.css — no se redefinen aquí para que el interruptor
+   de tema funcione correctamente en esta página.
+   ========================================================== */
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: radial-gradient(circle at 15% 15%, rgba(93, 183, 75, 0.10), transparent 40%),
+                radial-gradient(circle at 85% 20%, rgba(31, 139, 201, 0.10), transparent 40%),
+                radial-gradient(circle at 50% 90%, rgba(226, 31, 122, 0.08), transparent 45%),
+                var(--bg-color);
+}
+
+.portal-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    position: relative;
+}
+
+/* ----- Inputs (el genérico .form-control de styles.css trae fondo blanco fijo,
+         lo sobreescribimos para que calce con el tema oscuro de esta página) ----- */
+.form-control {
+    background-color: var(--input-bg);
+    border-color: var(--border-color);
+    color: var(--title-color);
+}
+
+.form-control::placeholder {
+    color: #64748b;
+}
+
+.form-control:focus {
+    border-color: var(--home-azul);
+    box-shadow: 0 0 0 3px rgba(31, 139, 201, 0.25);
+}
+
+/* ----- Tarjeta de Login ----- */
+.login-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    box-shadow: var(--shadow-md);
+    padding: 36px 34px;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
+
+/* El logo trae texto oscuro, así que lo dejamos sobre una placa clara
+   para que no se pierda contra el fondo oscuro de la página. */
+.login-card .logo-container {
+    max-width: 190px;
+    margin: 0 auto 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.login-card h1 {
+    font-size: 16px;
+    color: var(--title-color);
+    margin-bottom: 4px;
+}
+
+.login-card p.subtexto {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-bottom: 22px;
+}
+
+.login-card .form-group {
+    text-align: left;
+}
+
+.login-card .form-group label {
+    color: var(--title-color);
+}
+
+.login-card .btn-action {
+    margin-top: 6px;
+}
+
+.login-nota {
+    margin-top: 18px;
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.link-privacidad {
+    color: var(--home-azul);
+    text-decoration: underline;
+}
+
+.link-privacidad:hover {
+    color: #38bdf8;
+}
+
+.btn-login-submit { width: 100%; }
+
+/* ----- Menú de módulos (post-login) ----- */
+#menuModulos { display: none; width: 100%; max-width: 1160px; position: relative; z-index: 2; }
+
+.menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.menu-header h1 {
+    font-size: 20px;
+    color: var(--title-color);
+}
+
+.menu-header .btn-edit {
+    background-color: var(--chip-bg);
+    color: var(--title-color);
+}
+
+.menu-header .btn-edit:hover {
+    background-color: var(--chip-hover);
+}
+
+.modulos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 18px;
+}
+
+.modulo-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: var(--shadow-sm);
+    padding: 26px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+}
+
+.modulo-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--home-azul);
+}
+
+.modulo-icono {
+    font-size: 30px;
+    background: var(--chip-bg);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modulo-card h3 { font-size: 14.5px; color: var(--title-color); }
+.modulo-card p { font-size: 12px; color: var(--text-muted); min-height: 34px; }
+
+.modulo-card .btn-action { width: 100%; margin-top: 4px; text-decoration: none; }
+
+@media (max-width: 720px) {
+    .modulos-grid { grid-template-columns: 1fr; }
+}

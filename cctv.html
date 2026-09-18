@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas CCTV | HOME Delivery Logistics</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="cctv.css">
+    <link rel="icon" href="imagenes/logotipo.png" type="image">
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('previcheck-tema') || 'dark');</script>
+</head>
+<body>
+    <header>
+        <div class="logo-section">
+            <div class="logo-container"><img src="imagenes/logo.png" alt="HOME Delivery Logistics" class="logo-img"></div>
+            <span class="sub-title">| Seguimiento de Casos de Seguridad (CCTV)</span>
+        </div>
+        <div class="header-acciones">
+            <a href="index.html" class="btn-header btn-header-inicio">🏠 Inicio</a>
+            <a href="capacitaciones.html" class="btn-header">⬅️ Página Principal</a>
+        </div>
+    </header>
+
+    <h2 class="main-title">Seguimiento de Casos CCTV</h2>
+
+    <div class="tabs-cctv">
+        <button type="button" id="tabResumen" class="tab-boton tab-activo" onclick="mostrarVista('resumen')">📊 Resumen</button>
+        <button type="button" id="tabDetalle" class="tab-boton" onclick="mostrarVista('detalle')">📋 Detalle</button>
+        <div class="filtro-anio-container">
+            <label for="filtroAnio">Año:</label>
+            <select id="filtroAnio" class="form-control select-anio" onchange="aplicarFiltrosYRenderizar()">
+                <option value="todos">Todos los años</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- ===================== VISTA RESUMEN (solo gráficas) ===================== -->
+    <div id="vistaResumen" class="vista-cctv">
+
+        <div class="kpi-container-4">
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--neutro">🗂️</div>
+                <div>
+                    <span class="kpi-label">Total de Casos</span>
+                    <h4 id="kpiTotalCasos" class="kpi-valor kpi-valor--neutro">0</h4>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--azul">💰</div>
+                <div>
+                    <span class="kpi-label">Valorización Total</span>
+                    <h4 id="kpiValorizacionTotal" class="kpi-valor kpi-valor--azul">S/ 0.00</h4>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--rojo">⚠️</div>
+                <div>
+                    <span class="kpi-label">Casos con Incidente</span>
+                    <h4 id="kpiConIncidente" class="kpi-valor kpi-valor--rojo">0</h4>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--verde">✅</div>
+                <div>
+                    <span class="kpi-label">Casos sin Incidente</span>
+                    <h4 id="kpiSinIncidente" class="kpi-valor kpi-valor--verde">0</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="graficas-grid">
+            <div class="grafica-card">
+                <h3 class="titulo-grafica">Casos por Mes</h3>
+                <div class="grafica-canvas-wrap"><canvas id="graficoCasosPorMes"></canvas></div>
+            </div>
+            <div class="grafica-card">
+                <h3 class="titulo-grafica">Costos por Mes (S/)</h3>
+                <div class="grafica-canvas-wrap"><canvas id="graficoCostosPorMes"></canvas></div>
+            </div>
+            <div class="grafica-card">
+                <h3 class="titulo-grafica">Casos por Tipo de Resolución</h3>
+                <div class="grafica-canvas-wrap"><canvas id="graficoResolucion"></canvas></div>
+            </div>
+            <div class="grafica-card">
+                <h3 class="titulo-grafica">Casos por Operador</h3>
+                <div class="grafica-canvas-wrap"><canvas id="graficoOperador"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== VISTA DETALLE (formulario + tabla completa) ===================== -->
+    <div id="vistaDetalle" class="vista-cctv vista-oculta">
+
+        <div class="panel-formulario-caso" data-solo-editor="ocultar">
+            <h3 class="titulo-formulario">Registrar / Editar Solicitud</h3>
+            <form id="formCaso" onsubmit="guardarCaso(event); return false;">
+                <input type="hidden" id="editId" value="">
+
+                <div class="grid-formulario">
+                    <div class="form-group">
+                        <label>N° de Folio</label>
+                        <input type="text" id="folio" class="form-control" placeholder="Ej: 123456" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Solicitante (quién envía la solicitud)</label>
+                        <select id="solicitante" class="form-control" required></select>
+                    </div>
+                    <div class="form-group campo-ancho">
+                        <label>Descripción de la Mercadería</label>
+                        <input type="text" id="descripcionMercaderia" class="form-control" placeholder="Ej: 2 laptops HP" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Precio de la Mercadería (S/)</label>
+                        <input type="number" id="precioMercaderia" class="form-control" step="0.01" min="0" placeholder="0.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de Solicitud</label>
+                        <input type="date" id="fechaSolicitud" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de Respuesta</label>
+                        <input type="date" id="fechaRespuesta" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Resolución</label>
+                        <select id="resolucion" class="form-control" onchange="actualizarDetalleOptions()" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Detalle de Resolución</label>
+                        <select id="detalleResolucion" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Incidente de Seguridad</label>
+                        <select id="incidenteSeguridad" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Operador que Responde</label>
+                        <select id="operador" class="form-control" required></select>
+                    </div>
+                    <div class="form-group campo-ancho">
+                        <label>Resolución Final (link de OneDrive)</label>
+                        <input type="url" id="resolucionFinal" class="form-control" placeholder="https://onedrive.live.com/...">
+                    </div>
+                </div>
+
+                <button type="submit" id="btnSubmitCaso" class="btn-action">Registrar Caso</button>
+            </form>
+        </div>
+
+        <div class="barra-filtros-detalle">
+            <input type="text" id="filtroTextoDetalle" class="form-control input-filtro-texto" placeholder="Buscar por folio, mercadería o solicitante..." oninput="renderizarTablaDetalleFiltrada()">
+            <select id="filtroResolucionDetalle" class="form-control select-filtro" onchange="renderizarTablaDetalleFiltrada()"></select>
+            <select id="filtroOperadorDetalle" class="form-control select-filtro" onchange="renderizarTablaDetalleFiltrada()"></select>
+        </div>
+
+        <div class="table-scroll-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Folio</th>
+                        <th>Mercadería</th>
+                        <th>Precio</th>
+                        <th>F. Solicitud</th>
+                        <th>F. Respuesta</th>
+                        <th>Resolución</th>
+                        <th>Detalle</th>
+                        <th>Incidente</th>
+                        <th>Resumen</th>
+                        <th>Operador</th>
+                        <th>Solicitante</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyCasos">
+                    <tr><td colspan="13" class="empty-state">Cargando casos…</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL — Resumen general del caso -->
+    <div id="modalResumen" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalResumenTitulo">Resumen del Caso</h3>
+                <span class="close-modal" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalResumen()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cerrarModalResumen()}">&times;</span>
+            </div>
+            <div class="modal-body" id="modalResumenCuerpo"></div>
+        </div>
+    </div>
+
+    <script src="errores.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let casosCache = [];
+        let charts = {};
+
+        // Tema oscuro para Chart.js: texto y líneas de cuadrícula claras sobre fondo oscuro
+        // Colores de Chart.js — leídos de las variables de tema para que cambien con el interruptor claro/oscuro
+        function actualizarColoresChart() {
+            const estilos = getComputedStyle(document.documentElement);
+            Chart.defaults.color = estilos.getPropertyValue('--text-muted').trim() || '#8aa0c2';
+            Chart.defaults.borderColor = estilos.getPropertyValue('--chart-grid').trim() || 'rgba(255, 255, 255, 0.08)';
+        }
+        actualizarColoresChart();
+        window.addEventListener('previcheck:tema-cambiado', () => {
+            actualizarColoresChart();
+            aplicarFiltrosYRenderizar();
+        });
+
+        const CATEGORIAS_RESOLUCION = {
+            '1. Cargado sin observaciones': [],
+            '2. Seguimiento sin observaciones': [],
+            '3. No aplica revisión': [
+                'Folio con bajada en log inversa',
+                'Regularizado por CDI',
+                'Recepcionado en tienda',
+                'Anulado por operaciones',
+                'Estado actualizado en BKST',
+                'Cerrado por SLA',
+                'Entregado en Geosort',
+                'No respuesta de OP.'
+            ],
+            '4. Cargado con observaciones': [
+                'Cargado en andén incorrecto',
+                'Cargado en otra patente',
+                'Folio sin carga sistémica'
+            ],
+            '5. Seguimiento con observaciones': [
+                'Folio derivado a LI',
+                'Sin data en WMS',
+                'Sin registro de cámara',
+                'Operario no identificado',
+                'Folio dañado',
+                'Se pierde el folio en seguimiento'
+            ]
+        };
+
+        const COLORES_RESOLUCION = {
+            '1. Cargado sin observaciones': '#16a34a',
+            '2. Seguimiento sin observaciones': '#1f8bc9',
+            '3. No aplica revisión': '#94a3b8',
+            '4. Cargado con observaciones': '#f59e0b',
+            '5. Seguimiento con observaciones': '#dc2626'
+        };
+
+        const INCIDENTES_SEGURIDAD = ['Sin incidente', 'Hurto', 'Robo Concentrado', 'Robo Frustrado', 'Siniestro'];
+        const OPERADORES_CCTV = ['Jhonny Teran', 'Eduardo Solano', 'José Hernandez'];
+
+        const SOLICITANTES_PERSONAS = [
+            'Jorge Sanchez', 'Franco Porras', 'Roberto Trigueros', 'Josue Valverde',
+            'Peter Chumioque', 'Meel Carlin', 'Bryan Chambi', 'Pedro Arias',
+            'Cristian Correa', 'Luis Lopez', 'Jhosmar Aguilar', 'Elvis Mamani'
+        ];
+        const SOLICITANTES_CT = [
+            'CT TRUJILLO', 'CT CHICLAYO', 'CT CHIMBOTE', 'CT HUANCAYO',
+            'CT ICA', 'CT AREQUIPA', 'CT PIURA'
+        ];
+
+        function esSolicitanteCT(nombre) {
+            return typeof nombre === 'string' && nombre.trim().toUpperCase().startsWith('CT');
+        }
+
+        /* ---------- Poblar selects estáticos ---------- */
+        function poblarSelectsEstaticos() {
+            document.getElementById('resolucion').innerHTML =
+                '<option value="">-- Seleccionar --</option>' +
+                Object.keys(CATEGORIAS_RESOLUCION).map(c => `<option value="${c}">${c}</option>`).join('');
+
+            document.getElementById('incidenteSeguridad').innerHTML =
+                INCIDENTES_SEGURIDAD.map(i => `<option value="${i}">${i}</option>`).join('');
+
+            document.getElementById('operador').innerHTML =
+                '<option value="">-- Seleccionar --</option>' +
+                OPERADORES_CCTV.map(o => `<option value="${o}">${o}</option>`).join('');
+
+            document.getElementById('solicitante').innerHTML =
+                '<option value="">-- Seleccionar --</option>' +
+                '<optgroup label="Personal">' +
+                SOLICITANTES_PERSONAS.map(s => `<option value="${s}">${s}</option>`).join('') +
+                '</optgroup>' +
+                '<optgroup label="Centros de Trabajo (CT)">' +
+                SOLICITANTES_CT.map(s => `<option value="${s}">${s}</option>`).join('') +
+                '</optgroup>';
+
+            document.getElementById('filtroResolucionDetalle').innerHTML =
+                '<option value="todas">Todas las resoluciones</option>' +
+                Object.keys(CATEGORIAS_RESOLUCION).map(c => `<option value="${c}">${c}</option>`).join('');
+
+            document.getElementById('filtroOperadorDetalle').innerHTML =
+                '<option value="todos">Todos los operadores</option>' +
+                OPERADORES_CCTV.map(o => `<option value="${o}">${o}</option>`).join('');
+        }
+
+        function actualizarDetalleOptions() {
+            const cat = document.getElementById('resolucion').value;
+            const detalleSelect = document.getElementById('detalleResolucion');
+            const opciones = CATEGORIAS_RESOLUCION[cat] || [];
+            if (opciones.length === 0) {
+                detalleSelect.innerHTML = '<option value="">No aplica</option>';
+                detalleSelect.disabled = true;
+            } else {
+                detalleSelect.disabled = false;
+                detalleSelect.innerHTML = '<option value="">-- Seleccionar detalle --</option>' +
+                    opciones.map(o => `<option value="${o}">${o}</option>`).join('');
+            }
+        }
+
+        /* ---------- Guardar / editar / eliminar ---------- */
+        async function guardarCaso(e) {
+            if (!validarCamposRequeridos(['folio', 'solicitante', 'descripcionMercaderia', 'precioMercaderia', 'fechaSolicitud', 'resolucion', 'incidenteSeguridad', 'operador'])) return;
+            if (!estaEnLinea()) { mostrarAviso('No hay conexión a internet. Espera a que vuelva la señal.', 'error'); return; }
+
+            const resolucionFinalValor = document.getElementById('resolucionFinal').value.trim();
+            if (!esUrlValida(resolucionFinalValor)) {
+                mostrarAviso('El link de OneDrive no parece una URL válida (debe empezar con https://).', 'advertencia');
+                document.getElementById('resolucionFinal').focus();
+                return;
+            }
+
+            const editId = document.getElementById('editId').value;
+            const registro = {
+                folio: document.getElementById('folio').value.trim(),
+                descripcion_mercaderia: document.getElementById('descripcionMercaderia').value.trim(),
+                precio_mercaderia: parseFloat(document.getElementById('precioMercaderia').value) || 0,
+                fecha_solicitud: document.getElementById('fechaSolicitud').value,
+                fecha_respuesta: document.getElementById('fechaRespuesta').value || null,
+                resolucion: document.getElementById('resolucion').value,
+                detalle_resolucion: document.getElementById('detalleResolucion').value || null,
+                incidente_seguridad: document.getElementById('incidenteSeguridad').value,
+                resolucion_final: resolucionFinalValor,
+                operador: document.getElementById('operador').value,
+                solicitante: document.getElementById('solicitante').value
+            };
+
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            registro.creado_por = user ? user.id : null;
+
+            const btn = document.getElementById('btnSubmitCaso');
+            const textoOriginalBtn = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Guardando…';
+            const ok = await guardarCasoCCTVRemoto(registro, editId ? parseInt(editId) : null);
+            btn.disabled = false;
+            btn.textContent = textoOriginalBtn;
+            if (!ok) return;
+
+            mostrarAviso(editId ? 'Caso actualizado correctamente.' : 'Caso registrado correctamente.', 'exito');
+            resetearFormularioCaso();
+            await cargarYRenderizarTodo();
+        }
+
+        function editarCaso(id) {
+            const c = casosCache.find(x => x.id === id);
+            if (!c) { mostrarAviso('Ese caso ya no existe. Actualizando…', 'advertencia'); cargarYRenderizarTodo(); return; }
+
+            mostrarVista('detalle');
+            document.getElementById('editId').value = id;
+            document.getElementById('folio').value = c.folio;
+            document.getElementById('descripcionMercaderia').value = c.descripcion_mercaderia;
+            document.getElementById('precioMercaderia').value = c.precio_mercaderia;
+            document.getElementById('fechaSolicitud').value = c.fecha_solicitud;
+            document.getElementById('fechaRespuesta').value = c.fecha_respuesta || '';
+            document.getElementById('resolucion').value = c.resolucion;
+            actualizarDetalleOptions();
+            document.getElementById('detalleResolucion').value = c.detalle_resolucion || '';
+            document.getElementById('incidenteSeguridad').value = c.incidente_seguridad;
+            document.getElementById('resolucionFinal').value = c.resolucion_final || '';
+            document.getElementById('operador').value = c.operador;
+            document.getElementById('solicitante').value = c.solicitante;
+
+            const btn = document.getElementById('btnSubmitCaso');
+            btn.textContent = 'Actualizar Caso';
+            btn.classList.add('btn-mode-update');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function eliminarCaso(id) {
+            if (!confirm('¿Eliminar este caso definitivamente?')) return;
+            const ok = await eliminarCasoCCTVRemoto(id);
+            if (!ok) return;
+            mostrarAviso('Caso eliminado.', 'exito');
+            await cargarYRenderizarTodo();
+        }
+
+        function resetearFormularioCaso() {
+            document.getElementById('formCaso').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('fechaSolicitud').valueAsDate = new Date();
+            actualizarDetalleOptions();
+            const btn = document.getElementById('btnSubmitCaso');
+            btn.textContent = 'Registrar Caso';
+            btn.classList.remove('btn-mode-update');
+        }
+
+        /* ---------- Modal de resumen ---------- */
+        function verResumenCaso(id) {
+            const c = casosCache.find(x => x.id === id);
+            if (!c) { mostrarAviso('Ese caso ya no existe. Actualizando…', 'advertencia'); cargarYRenderizarTodo(); return; }
+
+            document.getElementById('modalResumenTitulo').textContent = `Resumen — Folio ${c.folio}`;
+
+            const etiquetaCT = esSolicitanteCT(c.solicitante) ? '<span class="badge-ct">CT</span>' : '';
+            const enlace = c.resolucion_final
+                ? `<a href="${c.resolucion_final}" target="_blank" rel="noopener" class="btn-action btn-abrir-onedrive">🔗 Abrir documento en OneDrive</a>`
+                : '<p class="empty-state">No se registró un enlace de resolución todavía.</p>';
+
+            document.getElementById('modalResumenCuerpo').innerHTML = `
+                <ul class="lista-modal-docs">
+                    <li><span>Mercadería</span><strong>${c.descripcion_mercaderia}</strong></li>
+                    <li><span>Precio</span><strong>S/ ${Number(c.precio_mercaderia).toFixed(2)}</strong></li>
+                    <li><span>Solicitante</span><strong>${c.solicitante} ${etiquetaCT}</strong></li>
+                    <li><span>Operador</span><strong>${c.operador}</strong></li>
+                    <li><span>Fecha de Solicitud</span><strong>${c.fecha_solicitud || '—'}</strong></li>
+                    <li><span>Fecha de Respuesta</span><strong>${c.fecha_respuesta || '—'}</strong></li>
+                    <li><span>Resolución</span><strong>${c.resolucion}</strong></li>
+                    <li><span>Detalle</span><strong>${c.detalle_resolucion || '—'}</strong></li>
+                    <li><span>Incidente de Seguridad</span><strong>${c.incidente_seguridad}</strong></li>
+                </ul>
+                ${enlace}
+            `;
+            document.getElementById('modalResumen').style.display = 'flex';
+        }
+
+        function cerrarModalResumen() {
+            document.getElementById('modalResumen').style.display = 'none';
+        }
+
+        /* ---------- Tabs ---------- */
+        function mostrarVista(vista) {
+            document.getElementById('vistaResumen').classList.toggle('vista-oculta', vista !== 'resumen');
+            document.getElementById('vistaDetalle').classList.toggle('vista-oculta', vista !== 'detalle');
+            document.getElementById('tabResumen').classList.toggle('tab-activo', vista === 'resumen');
+            document.getElementById('tabDetalle').classList.toggle('tab-activo', vista === 'detalle');
+        }
+
+        /* ---------- Filtros y agregaciones ---------- */
+        function obtenerAniosDisponibles(lista) {
+            const anios = new Set(lista.map(c => (c.fecha_solicitud || '').slice(0, 4)).filter(Boolean));
+            return Array.from(anios).sort().reverse();
+        }
+
+        function filtrarPorAnio(lista, anio) {
+            if (anio === 'todos') return lista;
+            return lista.filter(c => (c.fecha_solicitud || '').startsWith(anio));
+        }
+
+        function calcularEstadisticas(lista) {
+            const totalCasos = lista.length;
+            const totalValorizacion = lista.reduce((acc, c) => acc + (Number(c.precio_mercaderia) || 0), 0);
+            const casosConIncidente = lista.filter(c => c.incidente_seguridad && c.incidente_seguridad !== 'Sin incidente').length;
+            return { totalCasos, totalValorizacion, casosConIncidente, casosSinIncidente: totalCasos - casosConIncidente };
+        }
+
+        function agruparPorMes(lista, campoValor) {
+            const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            const valores = new Array(12).fill(0);
+            lista.forEach(c => {
+                if (!c.fecha_solicitud) return;
+                const mes = parseInt(c.fecha_solicitud.slice(5, 7), 10) - 1;
+                if (mes >= 0 && mes < 12) valores[mes] += campoValor ? (Number(c[campoValor]) || 0) : 1;
+            });
+            return { meses, valores };
+        }
+
+        function agruparPorResolucion(lista) {
+            const conteo = {};
+            Object.keys(CATEGORIAS_RESOLUCION).forEach(cat => conteo[cat] = 0);
+            lista.forEach(c => { conteo[c.resolucion] = (conteo[c.resolucion] || 0) + 1; });
+            return conteo;
+        }
+
+        function agruparPorOperador(lista) {
+            const conteo = {};
+            OPERADORES_CCTV.forEach(op => conteo[op] = 0);
+            lista.forEach(c => { if (OPERADORES_CCTV.includes(c.operador)) conteo[c.operador]++; });
+            return conteo;
+        }
+
+        /* ---------- Gráficas ---------- */
+        function destruirCharts() {
+            Object.values(charts).forEach(ch => ch && ch.destroy());
+            charts = {};
+        }
+
+        function renderizarGraficas(lista) {
+            destruirCharts();
+
+            const { meses, valores: casosPorMes } = agruparPorMes(lista, null);
+            const { valores: costosPorMes } = agruparPorMes(lista, 'precio_mercaderia');
+            const porResolucion = agruparPorResolucion(lista);
+            const porOperador = agruparPorOperador(lista);
+
+            // 1. Casos por Mes — BARRAS
+            charts.casosPorMes = new Chart(document.getElementById('graficoCasosPorMes'), {
+                type: 'bar',
+                data: { labels: meses, datasets: [{ label: 'Casos', data: casosPorMes, backgroundColor: '#1f8bc9', borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+            });
+
+            // 2. Costos por Mes — LÍNEA
+            charts.costosPorMes = new Chart(document.getElementById('graficoCostosPorMes'), {
+                type: 'line',
+                data: {
+                    labels: meses,
+                    datasets: [{
+                        label: 'Costo (S/)',
+                        data: costosPorMes,
+                        borderColor: '#1f8bc9',
+                        backgroundColor: 'rgba(31, 139, 201, 0.18)',
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#1f8bc9',
+                        pointRadius: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+
+            // 3. Tipo de Resolución — CIRCULAR (pie)
+            const labelsResolucion = Object.keys(porResolucion);
+            charts.resolucion = new Chart(document.getElementById('graficoResolucion'), {
+                type: 'pie',
+                data: {
+                    labels: labelsResolucion,
+                    datasets: [{
+                        data: Object.values(porResolucion),
+                        backgroundColor: labelsResolucion.map(l => COLORES_RESOLUCION[l] || '#94a3b8')
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+
+            // 4. Casos por Operador — BARRAS HORIZONTALES
+            charts.operador = new Chart(document.getElementById('graficoOperador'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(porOperador),
+                    datasets: [{ label: 'Casos', data: Object.values(porOperador), backgroundColor: '#1f8bc9', borderRadius: 4 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
+            });
+        }
+
+        function actualizarKPIs(stats) {
+            document.getElementById('kpiTotalCasos').textContent = stats.totalCasos;
+            document.getElementById('kpiValorizacionTotal').textContent =
+                'S/ ' + stats.totalValorizacion.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('kpiConIncidente').textContent = stats.casosConIncidente;
+            document.getElementById('kpiSinIncidente').textContent = stats.casosSinIncidente;
+        }
+
+        /* ---------- Detalle (tabla) ---------- */
+        function renderizarTablaDetalle(lista) {
+            const tbody = document.getElementById('tbodyCasos');
+            tbody.innerHTML = '';
+            if (lista.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="13" class="empty-state">No hay casos que coincidan con los filtros.</td></tr>`;
+                return;
+            }
+            const permiteEdicion = !esLector();
+            lista.forEach((c, i) => {
+                const tr = document.createElement('tr');
+                const etiquetaCT = esSolicitanteCT(c.solicitante) ? '<span class="badge-ct">CT</span>' : '';
+                tr.innerHTML = `
+                    <td>${i + 1}</td>
+                    <td>${c.folio}</td>
+                    <td>${c.descripcion_mercaderia}</td>
+                    <td>S/ ${Number(c.precio_mercaderia).toFixed(2)}</td>
+                    <td>${c.fecha_solicitud || ''}</td>
+                    <td>${c.fecha_respuesta || '—'}</td>
+                    <td>${c.resolucion}</td>
+                    <td>${c.detalle_resolucion || '—'}</td>
+                    <td>${c.incidente_seguridad}</td>
+                    <td><span class="badge-files" role="button" tabindex="0" onclick="verResumenCaso(${c.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();verResumenCaso(${c.id})}">📄 Ver resumen</span></td>
+                    <td>${c.operador}</td>
+                    <td>${c.solicitante} ${etiquetaCT}</td>
+                    <td>
+                        ${permiteEdicion ? `
+                            <button class="btn-sm btn-edit" onclick="editarCaso(${c.id})" aria-label="Editar caso">✏️</button>
+                            <button class="btn-sm btn-delete" onclick="eliminarCaso(${c.id})" aria-label="Eliminar caso">🗑️</button>
+                        ` : '<span class="texto-solo-lectura">Solo lectura</span>'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderizarTablaDetalleFiltrada() {
+            const texto = document.getElementById('filtroTextoDetalle').value.toLowerCase().trim();
+            const resolucionFiltro = document.getElementById('filtroResolucionDetalle').value;
+            const operadorFiltro = document.getElementById('filtroOperadorDetalle').value;
+            const anio = document.getElementById('filtroAnio').value;
+
+            let lista = filtrarPorAnio(casosCache, anio);
+            lista = lista.filter(c => {
+                const coincideTexto = !texto || [c.folio, c.descripcion_mercaderia, c.solicitante].join(' ').toLowerCase().includes(texto);
+                const coincideResolucion = resolucionFiltro === 'todas' || c.resolucion === resolucionFiltro;
+                const coincideOperador = operadorFiltro === 'todos' || c.operador === operadorFiltro;
+                return coincideTexto && coincideResolucion && coincideOperador;
+            });
+
+            renderizarTablaDetalle(lista);
+        }
+
+        /* ---------- Orquestador general ---------- */
+        function poblarSelectorAnio(lista) {
+            const select = document.getElementById('filtroAnio');
+            const anioActual = select.value || 'todos';
+            const anios = obtenerAniosDisponibles(lista);
+            select.innerHTML = '<option value="todos">Todos los años</option>' +
+                anios.map(a => `<option value="${a}">${a}</option>`).join('');
+            if (anios.includes(anioActual)) select.value = anioActual;
+        }
+
+        function aplicarFiltrosYRenderizar() {
+            const anio = document.getElementById('filtroAnio').value;
+            const listaAnio = filtrarPorAnio(casosCache, anio);
+            actualizarKPIs(calcularEstadisticas(listaAnio));
+            renderizarGraficas(listaAnio);
+            renderizarTablaDetalleFiltrada();
+        }
+
+        async function cargarYRenderizarTodo() {
+            casosCache = await listarCasosCCTV();
+            poblarSelectorAnio(casosCache);
+            aplicarFiltrosYRenderizar();
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const session = await exigirSesion();
+            if (!session) return;
+            poblarSelectsEstaticos();
+            actualizarDetalleOptions();
+            document.getElementById('fechaSolicitud').valueAsDate = new Date();
+            await cargarYRenderizarTodo();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capacitaciones Obligatorias | PreviCheck</title>
+    <link rel="stylesheet" href="styles2.css">
+    <link rel="stylesheet" href="capacitaciones.css">
+    <link rel="icon" href="imagenes/logotipo.png" type="image">
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('previcheck-tema') || 'dark');</script>
+</head>
+<body>
+    <header>
+        <div class="logo-section">
+            <div class="logo-container"><img src="imagenes/logo.png" alt="PreviCheck" class="logo-img"></div>
+            <span class="sub-title">| Capacitaciones Obligatorias por Área</span>
+        </div>
+        <div class="header-acciones">
+            <a href="index.html" class="btn-header btn-header-inicio-oscuro">🏠 Inicio</a>
+            <a href="comite.html" class="btn-header btn-header-principal">Comité de Seguridad</a>
+        </div>
+    </header>
+
+    <h2 class="main-title">Cumplimiento de Capacitaciones Obligatorias</h2>
+
+    <div class="dashboard-container dashboard-columna-unica">
+        <div class="panel-right panel-ancho-completo">
+
+            <div class="kpi-container-4">
+                <div class="kpi-card">
+                    <div class="kpi-icono kpi-icono--neutro">👥</div>
+                    <div>
+                        <span class="kpi-label">Total Personal</span>
+                        <h4 id="kpiTotalPersonal" class="kpi-valor kpi-valor--neutro">0</h4>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icono kpi-icono--verde">✅</div>
+                    <div>
+                        <span class="kpi-label">Completaron las 7</span>
+                        <h4 id="kpiCompletados" class="kpi-valor kpi-valor--verde">0</h4>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icono kpi-icono--rojo">⚠️</div>
+                    <div>
+                        <span class="kpi-label">Pendientes / Incompletos</span>
+                        <h4 id="kpiPendientes" class="kpi-valor kpi-valor--rojo">0</h4>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icono kpi-icono--azul">📈</div>
+                    <div>
+                        <span class="kpi-label">% Cumplimiento Global</span>
+                        <h4 id="kpiPorcentaje" class="kpi-valor kpi-valor--azul">0%</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="graficas-grid-charlas">
+                <div class="grafica-card">
+                    <h3 class="titulo-grafica">Cumplimiento General</h3>
+                    <div class="grafica-canvas-wrap"><canvas id="graficoCumplimiento"></canvas></div>
+                </div>
+                <div class="grafica-card">
+                    <h3 class="titulo-grafica">Personal por Área</h3>
+                    <div class="grafica-canvas-wrap"><canvas id="graficoPorArea"></canvas></div>
+                </div>
+            </div>
+
+            <div class="panel-formulario-persona" data-solo-editor="ocultar">
+                <h3 class="titulo-formulario">Agregar Personal</h3>
+                <form id="formPersona" onsubmit="guardarPersona(event); return false;">
+                    <input type="hidden" id="editId" value="">
+                    <div class="grid-formulario-persona">
+                        <div class="form-group">
+                            <label>Área</label>
+                            <select id="areaPersona" class="form-control" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>DNI</label>
+                            <input type="text" id="dniPersona" class="form-control" inputmode="numeric">
+                        </div>
+                        <div class="form-group">
+                            <label>Nombres</label>
+                            <input type="text" id="nombresPersona" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Apellido Paterno</label>
+                            <input type="text" id="apellidoPaternoPersona" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Apellido Materno</label>
+                            <input type="text" id="apellidoMaternoPersona" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Cargo</label>
+                            <input type="text" id="cargoPersona" class="form-control">
+                        </div>
+                    </div>
+                    <button type="submit" id="btnSubmitPersona" class="btn-action">Agregar Personal</button>
+                </form>
+            </div>
+
+            <div class="barra-filtros">
+                <h3 class="titulo-matriz">Listado de Trabajadores y Progreso</h3>
+                <div class="filtros-grupo">
+                    <select id="filtroArea" class="form-control select-area" onchange="renderizarMatriz()"></select>
+                    <select id="filtroProgreso" class="form-control select-progreso" onchange="renderizarMatriz()">
+                        <option value="todos">Todos los progresos</option>
+                        <option value="7">Completos (7/7)</option>
+                        <option value="0">Sin ninguna (0/7)</option>
+                        <option value="parcial">Parciales</option>
+                    </select>
+                    <input type="text" id="filtroNombre" class="form-control input-nombre-filtro" placeholder="Buscar trabajador..." oninput="renderizarMatriz()">
+                </div>
+            </div>
+
+            <div class="table-scroll-container tabla-capacitaciones-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Área</th>
+                            <th>Trabajador</th>
+                            <th>DNI</th>
+                            <th>Cargo</th>
+                            <th>C1<br><span class="subtitulo-capacitacion">Primeros Auxilios</span></th>
+                            <th>C2<br><span class="subtitulo-capacitacion">Política SST / Mapa riesgo</span></th>
+                            <th>C3<br><span class="subtitulo-capacitacion">Riesgos Ergonómicos</span></th>
+                            <th>C4<br><span class="subtitulo-capacitacion">Uso de extintor</span></th>
+                            <th>C5<br><span class="subtitulo-capacitacion">Hipertensión/diabetes/obesidad</span></th>
+                            <th>C6<br><span class="subtitulo-capacitacion">Plan de emergencia</span></th>
+                            <th>C7<br><span class="subtitulo-capacitacion">Seguridad como forma de vida</span></th>
+                            <th>Progreso</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyMatriz">
+                        <tr><td colspan="15" class="empty-state">Cargando…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="leyenda-capacitaciones">
+                <strong>Responsables de ejecución:</strong>
+                C1, C3, C5 → Médico Ocupacional &nbsp;|&nbsp; C2, C4, C6, C7 → Prevención
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL — Editar persona -->
+    <div id="modalPersona" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Datos del Trabajador</h3>
+                <span class="close-modal" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalPersona()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cerrarModalPersona()}">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editModalId">
+                <div class="form-group">
+                    <label>Área</label>
+                    <select id="editModalArea" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label>DNI</label>
+                    <input type="text" id="editModalDni" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Nombres</label>
+                    <input type="text" id="editModalNombres" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Apellido Paterno</label>
+                    <input type="text" id="editModalApPaterno" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Apellido Materno</label>
+                    <input type="text" id="editModalApMaterno" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Cargo</label>
+                    <input type="text" id="editModalCargo" class="form-control">
+                </div>
+                <button type="button" class="btn-action" onclick="guardarEdicionPersona()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="errores.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let registrosCache = [];
+        let graficos = {};
+
+        const AREAS = ['RRHH', 'INGENIERIA', 'TRANSPORTE', 'OPERACIONES', 'PREVENCION Y RIESGO', 'CONTROL Y GESTION'];
+
+        function poblarSelectsArea() {
+            const opciones = AREAS.map(a => `<option value="${a}">${a}</option>`).join('');
+            document.getElementById('areaPersona').innerHTML = '<option value="">-- Seleccionar --</option>' + opciones;
+            document.getElementById('editModalArea').innerHTML = opciones;
+            document.getElementById('filtroArea').innerHTML = '<option value="todas">Todas las áreas</option>' + opciones;
+        }
+
+        // Colores de Chart.js — leídos de las variables de tema para que cambien con el interruptor claro/oscuro
+        function actualizarColoresChart() {
+            const estilos = getComputedStyle(document.documentElement);
+            Chart.defaults.color = estilos.getPropertyValue('--text-muted').trim() || '#8aa0c2';
+            Chart.defaults.borderColor = estilos.getPropertyValue('--chart-grid').trim() || 'rgba(255, 255, 255, 0.08)';
+        }
+        window.addEventListener('previcheck:tema-cambiado', () => {
+            actualizarColoresChart();
+            renderizarGraficas();
+        });
+
+        function nombreCompleto(item) {
+            return [item.nombres, item.apellido_paterno, item.apellido_materno].filter(Boolean).join(' ');
+        }
+
+        function sumaCumplimiento(item) {
+            return ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7'].reduce((acc, c) => acc + (item[c] ? 1 : 0), 0);
+        }
+
+        async function cargarPersonal() {
+            registrosCache = await listarPersonalCapacitaciones();
+            actualizarEstadisticas();
+            renderizarGraficas();
+            renderizarMatriz();
+        }
+
+        function actualizarEstadisticas() {
+            const total = registrosCache.length;
+            const completados = registrosCache.filter(item => sumaCumplimiento(item) === 7).length;
+            const pendientes = total - completados;
+            const totalPosible = total * 7;
+            const totalCumplido = registrosCache.reduce((acc, item) => acc + sumaCumplimiento(item), 0);
+            const porcentaje = totalPosible > 0 ? ((totalCumplido / totalPosible) * 100).toFixed(1) + '%' : '0%';
+
+            document.getElementById('kpiTotalPersonal').textContent = total;
+            document.getElementById('kpiCompletados').textContent = completados;
+            document.getElementById('kpiPendientes').textContent = pendientes;
+            document.getElementById('kpiPorcentaje').textContent = porcentaje;
+        }
+
+        function renderizarGraficas() {
+            Object.values(graficos).forEach(g => g && g.destroy());
+            graficos = {};
+
+            const completados = registrosCache.filter(item => sumaCumplimiento(item) === 7).length;
+            const pendientes = registrosCache.length - completados;
+
+            graficos.cumplimiento = new Chart(document.getElementById('graficoCumplimiento'), {
+                type: 'pie',
+                data: {
+                    labels: ['Completos (7/7)', 'Pendientes'],
+                    datasets: [{ data: [completados, pendientes], backgroundColor: ['#16a34a', '#dc2626'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+
+            const conteoArea = {};
+            AREAS.forEach(a => conteoArea[a] = 0);
+            registrosCache.forEach(item => { if (conteoArea[item.area] !== undefined) conteoArea[item.area]++; });
+
+            graficos.porArea = new Chart(document.getElementById('graficoPorArea'), {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(conteoArea),
+                    datasets: [{ data: Object.values(conteoArea), backgroundColor: ['#1f8bc9', '#5db74b', '#e21f7a', '#f59e0b', '#7c3aed', '#0d9488'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+        }
+
+        function renderizarMatriz() {
+            const textoFiltro = document.getElementById('filtroNombre').value.toLowerCase().trim();
+            const areaFiltro = document.getElementById('filtroArea').value;
+            const progresoFiltro = document.getElementById('filtroProgreso').value;
+
+            const filtrados = registrosCache.filter(item => {
+                const suma = sumaCumplimiento(item);
+                const cumpleTexto = !textoFiltro || nombreCompleto(item).toLowerCase().includes(textoFiltro) || (item.dni || '').includes(textoFiltro);
+                const cumpleArea = areaFiltro === 'todas' || item.area === areaFiltro;
+                let cumpleProgreso = true;
+                if (progresoFiltro === '7') cumpleProgreso = suma === 7;
+                else if (progresoFiltro === '0') cumpleProgreso = suma === 0;
+                else if (progresoFiltro === 'parcial') cumpleProgreso = suma > 0 && suma < 7;
+                return cumpleTexto && cumpleArea && cumpleProgreso;
+            });
+
+            const tbody = document.getElementById('tbodyMatriz');
+            tbody.innerHTML = '';
+
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="15" class="empty-state">No se encontraron resultados con los filtros seleccionados.</td></tr>`;
+                return;
+            }
+
+            const soloLectura = esLector();
+            const deshabilitado = soloLectura ? 'disabled' : '';
+
+            filtrados.forEach((item, index) => {
+                const suma = sumaCumplimiento(item);
+                const estadoCompleto = suma === 7;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.area}</td>
+                    <td><strong>${nombreCompleto(item)}</strong></td>
+                    <td>${item.dni || '—'}</td>
+                    <td>${item.cargo || '—'}</td>
+                    <td class="celda-centrada"><input type="checkbox" ${item.c1 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c1', this.checked)"></td>
+                    <td class="celda-centrada"><input type="checkbox" ${item.c2 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c2', this.checked)"></td>
+                    <td class="celda-centrada"><input type="checkbox" ${item.c3 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c3', this.checked)"></td>
+                    <td class="celda-centrada"><input type="checkbox" ${item.c4 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c4', this.checked)"></td>
+                    <td class="celda-centrada"><input type="checkbox" ${item.c5 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c5', this.checked)"></td>
+                    <td class="celda-centrada"><input type="checkbox" ${item.c6 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c6', this.checked)"></td>
+                    <td class="celda-centrada"><input type="checkbox" ${item.c7 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c7', this.checked)"></td>
+                    <td class="celda-centrada"><span class="valor-progreso ${suma === 7 ? 'progreso-completo' : 'progreso-pendiente'}">${suma} / 7</span></td>
+                    <td class="celda-centrada">
+                        <span class="badge-estado ${estadoCompleto ? 'badge-completo' : 'badge-pendiente'}">
+                            ${estadoCompleto ? 'COMPLETO' : 'PENDIENTE'}
+                        </span>
+                    </td>
+                    <td class="celda-centrada acciones-persona">
+                        ${soloLectura ? '' : `
+                            <button class="btn-sm btn-edit" onclick="completarTodas(${item.id})" title="Marcar las 7">✔️</button>
+                            <button class="btn-sm btn-edit" onclick="abrirModalPersona(${item.id})" aria-label="Editar datos">✏️</button>
+                            <button class="btn-sm btn-delete" onclick="eliminarPersona(${item.id})" aria-label="Eliminar">🗑️</button>
+                        `}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function cambiarEstado(id, campo, valor) {
+            const ok = await actualizarPersonalCapacitaciones(id, { [campo]: valor });
+            if (ok) await cargarPersonal();
+        }
+
+        async function completarTodas(id) {
+            const ok = await actualizarPersonalCapacitaciones(id, { c1: true, c2: true, c3: true, c4: true, c5: true, c6: true, c7: true });
+            if (ok) await cargarPersonal();
+        }
+
+        /* ---------- Agregar personal ---------- */
+        async function guardarPersona(e) {
+            if (!validarCamposRequeridos(['areaPersona', 'nombresPersona'])) return;
+            if (!estaEnLinea()) { mostrarAviso('No hay conexión a internet. Espera a que vuelva la señal.', 'error'); return; }
+
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const registro = {
+                area: document.getElementById('areaPersona').value,
+                dni: document.getElementById('dniPersona').value.trim(),
+                nombres: document.getElementById('nombresPersona').value.trim(),
+                apellido_paterno: document.getElementById('apellidoPaternoPersona').value.trim(),
+                apellido_materno: document.getElementById('apellidoMaternoPersona').value.trim(),
+                cargo: document.getElementById('cargoPersona').value.trim(),
+                creado_por: user ? user.id : null
+            };
+
+            const btn = document.getElementById('btnSubmitPersona');
+            btn.disabled = true;
+            btn.textContent = 'Guardando…';
+            const ok = await agregarPersonalCapacitaciones(registro);
+            btn.disabled = false;
+            btn.textContent = 'Agregar Personal';
+            if (!ok) return;
+
+            mostrarAviso('Personal agregado correctamente.', 'exito');
+            document.getElementById('formPersona').reset();
+            await cargarPersonal();
+        }
+
+        async function eliminarPersona(id) {
+            if (!confirm('¿Eliminar a esta persona del registro de capacitaciones?')) return;
+            const ok = await eliminarPersonalCapacitaciones(id);
+            if (!ok) return;
+            mostrarAviso('Persona eliminada.', 'exito');
+            await cargarPersonal();
+        }
+
+        /* ---------- Editar (modal) ---------- */
+        function abrirModalPersona(id) {
+            const item = registrosCache.find(x => x.id === id);
+            if (!item) { mostrarAviso('Ese registro ya no existe. Actualizando…', 'advertencia'); cargarPersonal(); return; }
+
+            document.getElementById('editModalId').value = item.id;
+            document.getElementById('editModalArea').value = item.area;
+            document.getElementById('editModalDni').value = item.dni || '';
+            document.getElementById('editModalNombres').value = item.nombres || '';
+            document.getElementById('editModalApPaterno').value = item.apellido_paterno || '';
+            document.getElementById('editModalApMaterno').value = item.apellido_materno || '';
+            document.getElementById('editModalCargo').value = item.cargo || '';
+            document.getElementById('modalPersona').style.display = 'flex';
+        }
+
+        function cerrarModalPersona() {
+            document.getElementById('modalPersona').style.display = 'none';
+        }
+
+        async function guardarEdicionPersona() {
+            const id = parseInt(document.getElementById('editModalId').value);
+            const campos = {
+                area: document.getElementById('editModalArea').value,
+                dni: document.getElementById('editModalDni').value.trim(),
+                nombres: document.getElementById('editModalNombres').value.trim(),
+                apellido_paterno: document.getElementById('editModalApPaterno').value.trim(),
+                apellido_materno: document.getElementById('editModalApMaterno').value.trim(),
+                cargo: document.getElementById('editModalCargo').value.trim(),
+            };
+            const ok = await actualizarPersonalCapacitaciones(id, campos);
+            if (!ok) return;
+            mostrarAviso('Datos actualizados.', 'exito');
+            cerrarModalPersona();
+            await cargarPersonal();
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const session = await exigirSesion();
+            if (!session) return;
+            poblarSelectsArea();
+            actualizarColoresChart();
+            await cargarPersonal();
+        });
+    </script>
+</body>
+</html>

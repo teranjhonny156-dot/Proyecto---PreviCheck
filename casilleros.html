@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Casilleros | PreviCheck</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="casilleros.css">
+    <link rel="icon" href="imagenes/logotipo.png" type="image">
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('previcheck-tema') || 'dark');</script>
+</head>
+<body>
+    <header>
+        <div class="logo-section">
+            <div class="logo-container"><img src="imagenes/logo.png" alt="PreviCheck" class="logo-img"></div>
+            <span class="sub-title">| Control de Casilleros</span>
+        </div>
+        <div class="header-acciones">
+            <a href="index.html" class="btn-header btn-header-inicio">🏠 Inicio</a>
+            <a href="capacitaciones.html" class="btn-header">⬅️ Página Principal</a>
+        </div>
+    </header>
+
+    <h2 class="main-title">Control de Casilleros (180)</h2>
+
+    <div class="resumen-grid">
+        <div class="kpi-columna">
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--neutro">🗄️</div>
+                <div>
+                    <span class="kpi-label">Total Casilleros</span>
+                    <h4 id="kpiTotal" class="kpi-valor kpi-valor--neutro">180</h4>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--rojo">🔒</div>
+                <div>
+                    <span class="kpi-label">En Uso</span>
+                    <h4 id="kpiEnUso" class="kpi-valor kpi-valor--rojo">0</h4>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--verde">🟩</div>
+                <div>
+                    <span class="kpi-label">Disponibles</span>
+                    <h4 id="kpiDisponibles" class="kpi-valor kpi-valor--verde">0</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="grafica-card">
+            <h3 class="titulo-grafica">Ocupación de Casilleros</h3>
+            <div class="grafica-canvas-wrap"><canvas id="graficoOcupacion"></canvas></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="search-bar-container">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input type="text" id="inputBuscador" placeholder="Buscar por número de casillero o personal asignado..." oninput="renderizarTablaCasilleros()">
+        </div>
+
+        <div class="table-actions-bar">
+            <div class="counter-text">
+                Mostrando <strong id="strongMostrados">0</strong> de <strong id="strongTotalTabla">0</strong> casilleros
+            </div>
+            <select id="filtroEstado" class="form-control select-filtro-estado" onchange="renderizarTablaCasilleros()">
+                <option value="todos">Todos los estados</option>
+                <option value="en_uso">Solo en uso</option>
+                <option value="disponible">Solo disponibles</option>
+            </select>
+        </div>
+
+        <div class="table-scroll-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th class="col-num">N° Casillero</th>
+                        <th>Personal Asignado</th>
+                        <th>Estado</th>
+                        <th class="col-actions">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyCasilleros">
+                    <tr><td colspan="4" class="empty-state">Cargando casilleros…</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===================== INSPECCIONES IMPROVISADAS ===================== -->
+    <div class="container seccion-inspecciones">
+        <h2 class="main-title">Inspecciones Improvisadas</h2>
+
+        <div class="panel-inspeccion" data-solo-editor="ocultar">
+            <h3 class="titulo-formulario">Registrar nueva inspección</h3>
+            <form id="formInspeccion" onsubmit="guardarInspeccion(event); return false;">
+                <div class="form-group">
+                    <label>Fecha de la inspección</label>
+                    <input type="date" id="fechaInspeccion" class="form-control" required>
+                </div>
+
+                <div class="checklist-container" id="checklistContainer"></div>
+
+                <div class="form-group">
+                    <label>Comentarios</label>
+                    <textarea id="comentariosInspeccion" class="form-control textarea-comentarios" placeholder="Observaciones generales de la inspección..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Imágenes / evidencias (link de OneDrive)</label>
+                    <input type="url" id="linkInspeccion" class="form-control" placeholder="https://onedrive.live.com/...">
+                </div>
+
+                <button type="submit" id="btnGuardarInspeccion" class="btn-action">Guardar Inspección</button>
+            </form>
+        </div>
+
+        <h3 class="titulo-formulario">Historial de Inspecciones</h3>
+        <div class="table-scroll-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Resultado del Checklist</th>
+                        <th>Comentarios</th>
+                        <th>Evidencias</th>
+                        <th class="col-actions">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyInspecciones">
+                    <tr><td colspan="5" class="empty-state">Cargando historial…</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL — Editar casillero -->
+    <div id="modalCasillero" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalCasilleroTitulo">Editar Casillero</h3>
+                <span class="close-modal" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalCasillero()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cerrarModalCasillero()}">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editCasilleroId">
+                <div class="form-group">
+                    <label>Personal Asignado</label>
+                    <input type="text" id="editPersonalAsignado" class="form-control" placeholder="Nombre del colaborador (dejar vacío si está disponible)">
+                </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select id="editEstadoCasillero" class="form-control">
+                        <option value="disponible">Disponible</option>
+                        <option value="en_uso">En uso</option>
+                    </select>
+                </div>
+                <button type="button" id="btnGuardarCasillero" class="btn-action" onclick="guardarEdicionCasillero()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="errores.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let casillerosCache = [];
+        let inspeccionesCache = [];
+        let graficoOcupacion = null;
+
+        // Tema oscuro para Chart.js: texto y líneas de cuadrícula claras sobre fondo oscuro
+        // Colores de Chart.js — leídos de las variables de tema para que cambien con el interruptor claro/oscuro
+        function actualizarColoresChart() {
+            const estilos = getComputedStyle(document.documentElement);
+            Chart.defaults.color = estilos.getPropertyValue('--text-muted').trim() || '#8aa0c2';
+            Chart.defaults.borderColor = estilos.getPropertyValue('--chart-grid').trim() || 'rgba(255, 255, 255, 0.08)';
+        }
+        actualizarColoresChart();
+        window.addEventListener('previcheck:tema-cambiado', () => {
+            actualizarColoresChart();
+            renderizarGraficoOcupacion();
+        });
+
+        const CHECKLIST_ITEMS = [
+            'Casilleros cerrados correctamente',
+            'Sin objetos prohibidos visibles',
+            'Orden y limpieza general',
+            'Etiquetado / rotulado correcto',
+            'Candados en buen estado',
+            'No hay candados personales no autorizados'
+        ];
+
+        function construirChecklistForm() {
+            const cont = document.getElementById('checklistContainer');
+            cont.innerHTML = CHECKLIST_ITEMS.map((item, i) => `
+                <label class="checklist-item">
+                    <input type="checkbox" class="check-item" data-item="${item}" checked>
+                    <span>${item}</span>
+                </label>
+            `).join('');
+        }
+
+        /* ---------- Casilleros ---------- */
+        async function cargarCasilleros() {
+            casillerosCache = await listarCasilleros();
+            actualizarKPIsCasilleros();
+            renderizarGraficoOcupacion();
+            renderizarTablaCasilleros();
+        }
+
+        function actualizarKPIsCasilleros() {
+            const total = casillerosCache.length;
+            const enUso = casillerosCache.filter(c => c.estado === 'en_uso').length;
+            document.getElementById('kpiTotal').textContent = total;
+            document.getElementById('kpiEnUso').textContent = enUso;
+            document.getElementById('kpiDisponibles').textContent = total - enUso;
+        }
+
+        function renderizarGraficoOcupacion() {
+            const enUso = casillerosCache.filter(c => c.estado === 'en_uso').length;
+            const disponibles = casillerosCache.length - enUso;
+
+            if (graficoOcupacion) graficoOcupacion.destroy();
+            graficoOcupacion = new Chart(document.getElementById('graficoOcupacion'), {
+                type: 'pie',
+                data: {
+                    labels: ['En uso', 'Disponible'],
+                    datasets: [{ data: [enUso, disponibles], backgroundColor: ['#dc2626', '#16a34a'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+        }
+
+        function renderizarTablaCasilleros() {
+            const texto = document.getElementById('inputBuscador').value.toLowerCase().trim();
+            const filtroEstado = document.getElementById('filtroEstado').value;
+
+            const filtrados = casillerosCache.filter(c => {
+                const coincideTexto = !texto ||
+                    String(c.numero).includes(texto) ||
+                    (c.personal_asignado || '').toLowerCase().includes(texto);
+                const coincideEstado = filtroEstado === 'todos' || c.estado === filtroEstado;
+                return coincideTexto && coincideEstado;
+            });
+
+            const tbody = document.getElementById('tbodyCasilleros');
+            tbody.innerHTML = '';
+
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No hay casilleros que coincidan con la búsqueda.</td></tr>`;
+            } else {
+                const permiteEdicion = !esLector();
+                filtrados.forEach(c => {
+                    const tr = document.createElement('tr');
+                    const esEnUso = c.estado === 'en_uso';
+                    tr.innerHTML = `
+                        <td class="col-num"><strong>${c.numero}</strong></td>
+                        <td>${c.personal_asignado || '—'}</td>
+                        <td><span class="badge-estado-casillero ${esEnUso ? 'badge-en-uso' : 'badge-disponible'}">${esEnUso ? 'En uso' : 'Disponible'}</span></td>
+                        <td class="col-actions">
+                            ${permiteEdicion ? `<button class="btn-sm btn-edit" onclick="abrirModalCasillero(${c.id})" aria-label="Editar casillero ${c.numero}">✏️</button>` : '<span class="texto-solo-lectura">—</span>'}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('strongMostrados').textContent = filtrados.length;
+            document.getElementById('strongTotalTabla').textContent = casillerosCache.length;
+        }
+
+        function abrirModalCasillero(id) {
+            const c = casillerosCache.find(x => x.id === id);
+            if (!c) return;
+            document.getElementById('editCasilleroId').value = c.id;
+            document.getElementById('modalCasilleroTitulo').textContent = `Editar Casillero N° ${c.numero}`;
+            document.getElementById('editPersonalAsignado').value = c.personal_asignado || '';
+            document.getElementById('editEstadoCasillero').value = c.estado;
+            document.getElementById('modalCasillero').style.display = 'flex';
+        }
+
+        function cerrarModalCasillero() {
+            document.getElementById('modalCasillero').style.display = 'none';
+        }
+
+        async function guardarEdicionCasillero() {
+            if (!estaEnLinea()) { mostrarAviso('No hay conexión a internet. Espera a que vuelva la señal.', 'error'); return; }
+
+            const id = parseInt(document.getElementById('editCasilleroId').value);
+            const personal = document.getElementById('editPersonalAsignado').value.trim();
+            const estado = document.getElementById('editEstadoCasillero').value;
+
+            const btn = document.getElementById('btnGuardarCasillero');
+            btn.disabled = true;
+            btn.textContent = 'Guardando…';
+
+            const ok = await actualizarCasillero(id, { personal_asignado: personal || null, estado });
+
+            btn.disabled = false;
+            btn.textContent = 'Guardar Cambios';
+            if (!ok) return;
+
+            mostrarAviso('Casillero actualizado.', 'exito');
+            cerrarModalCasillero();
+            await cargarCasilleros();
+        }
+
+        /* ---------- Inspecciones improvisadas ---------- */
+        async function cargarInspecciones() {
+            inspeccionesCache = await listarInspeccionesCasilleros();
+            renderizarTablaInspecciones();
+        }
+
+        function renderizarTablaInspecciones() {
+            const tbody = document.getElementById('tbodyInspecciones');
+            tbody.innerHTML = '';
+
+            if (inspeccionesCache.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Aún no se registran inspecciones.</td></tr>`;
+                return;
+            }
+
+            const permiteEdicion = !esLector();
+            inspeccionesCache.forEach(insp => {
+                const lista = insp.checklist || [];
+                const cumplidos = lista.filter(i => i.cumple).length;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${insp.fecha}</td>
+                    <td><span class="badge-resultado ${cumplidos === lista.length ? 'badge-completo' : 'badge-pendiente'}">${cumplidos} / ${lista.length} cumplidos</span></td>
+                    <td>${insp.comentarios || '—'}</td>
+                    <td>${insp.link_onedrive ? `<a href="${insp.link_onedrive}" target="_blank" rel="noopener" class="btn-download">🔗 Ver evidencias</a>` : '—'}</td>
+                    <td class="col-actions">
+                        ${permiteEdicion ? `<button class="btn-sm btn-delete" onclick="eliminarInspeccion(${insp.id})" aria-label="Eliminar inspección">🗑️</button>` : '<span class="texto-solo-lectura">—</span>'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function guardarInspeccion(e) {
+            if (!validarCamposRequeridos(['fechaInspeccion'])) return;
+            if (!estaEnLinea()) { mostrarAviso('No hay conexión a internet. Espera a que vuelva la señal.', 'error'); return; }
+
+            const linkValor = document.getElementById('linkInspeccion').value.trim();
+            if (!esUrlValida(linkValor)) {
+                mostrarAviso('El link de evidencias no parece una URL válida (debe empezar con https://).', 'advertencia');
+                document.getElementById('linkInspeccion').focus();
+                return;
+            }
+
+            const checklist = Array.from(document.querySelectorAll('.check-item')).map(chk => ({
+                item: chk.dataset.item,
+                cumple: chk.checked
+            }));
+
+            const { data: { user } } = await supabaseClient.auth.getUser();
+
+            const registro = {
+                fecha: document.getElementById('fechaInspeccion').value,
+                checklist,
+                comentarios: document.getElementById('comentariosInspeccion').value.trim(),
+                link_onedrive: linkValor,
+                creado_por: user ? user.id : null
+            };
+
+            const btn = document.getElementById('btnGuardarInspeccion');
+            btn.disabled = true;
+            btn.textContent = 'Guardando…';
+
+            const ok = await guardarInspeccionCasillero(registro);
+
+            btn.disabled = false;
+            btn.textContent = 'Guardar Inspección';
+            if (!ok) return;
+
+            mostrarAviso('Inspección registrada correctamente.', 'exito');
+            document.getElementById('formInspeccion').reset();
+            document.getElementById('fechaInspeccion').valueAsDate = new Date();
+            construirChecklistForm();
+            await cargarInspecciones();
+        }
+
+        async function eliminarInspeccion(id) {
+            if (!confirm('¿Eliminar esta inspección definitivamente?')) return;
+            const ok = await eliminarInspeccionCasillero(id);
+            if (!ok) return;
+            mostrarAviso('Inspección eliminada.', 'exito');
+            await cargarInspecciones();
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const session = await exigirSesion();
+            if (!session) return;
+
+            document.getElementById('fechaInspeccion').valueAsDate = new Date();
+            construirChecklistForm();
+
+            await cargarCasilleros();
+            await cargarInspecciones();
+        });
+    </script>
+</body>
+</html>

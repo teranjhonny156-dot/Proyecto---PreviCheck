@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comité de Seguridad | PreviCheck</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="modulo-pendiente.css">
+    <link rel="stylesheet" href="comite.css">
+    <link rel="icon" href="imagenes/logotipo.png" type="image">
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('previcheck-tema') || 'dark');</script>
+</head>
+<body>
+    <header>
+        <div class="logo-section">
+            <div class="logo-container"><img src="imagenes/logo.png" alt="PreviCheck" class="logo-img"></div>
+            <span class="sub-title">| Comité de Seguridad</span>
+        </div>
+        <div class="header-acciones">
+            <a href="index.html" class="btn-header btn-header-inicio">🏠 Inicio</a>
+            <a href="capacitaciones.html" class="btn-header">⬅️ Capacitaciones</a>
+        </div>
+    </header>
+
+    <h2 class="main-title">Organigrama del Comité de Seguridad</h2>
+
+    <section class="seccion-comite">
+        <h3 class="titulo-seccion-comite">Miembros Titulares</h3>
+        <div class="grid-comite">
+            <div class="tarjeta-miembro">
+                <img src="imagenes/comite/titular-1.png" alt="Dett Chicana Cristian Erik" class="foto-miembro">
+                <h4>Dett Chicana Cristian Erik</h4>
+                <p>Coordinador de Mantenimiento</p>
+            </div>
+            <div class="tarjeta-miembro">
+                <img src="imagenes/comite/titular-2.png" alt="Pérez Mendoza Nilton Vladimir" class="foto-miembro">
+                <h4>Pérez Mendoza Nilton Vladimir</h4>
+                <p>Supervisor de Transporte</p>
+            </div>
+            <div class="tarjeta-miembro">
+                <img src="imagenes/comite/titular-3.png" alt="Correa Chiroque Cristian Andree" class="foto-miembro">
+                <h4>Correa Chiroque Cristian Andree</h4>
+                <p>Logistics Analyst</p>
+            </div>
+            <div class="tarjeta-miembro">
+                <img src="imagenes/comite/titular-4.png" alt="Salazar Rurush Edison Arnold" class="foto-miembro">
+                <h4>Salazar Rurush Edison Arnold</h4>
+                <p>Supervisor de Transporte</p>
+            </div>
+            <div class="tarjeta-miembro">
+                <img src="imagenes/comite/titular-5.png" alt="Pedro Enrique Arias Fasabi" class="foto-miembro">
+                <h4>Pedro Enrique Arias Fasabi</h4>
+                <p>Operations Supervisor</p>
+            </div>
+            <div class="tarjeta-miembro">
+                <img src="imagenes/comite/titular-6.png" alt="Álvarez Gil Richard Alejandro" class="foto-miembro">
+                <h4>Álvarez Gil Richard Alejandro</h4>
+                <p>Analista de Administración Financiera</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="seccion-comite">
+        <h3 class="titulo-seccion-comite">Miembros Suplentes</h3>
+        <div class="grid-comite">
+            <div class="tarjeta-miembro">
+                <img src="imagenes/comite/suplente-1.png" alt="Aguilar Vega Jhosmar Antonio" class="foto-miembro">
+                <h4>Aguilar Vega Jhosmar Antonio</h4>
+                <p>Logistics Assistant</p>
+            </div>
+            <div class="tarjeta-miembro">
+                <img src="imagenes/comite/suplente-2.png" alt="Erika Irene Sotomayor Centurion" class="foto-miembro">
+                <h4>Erika Irene Sotomayor Centurion</h4>
+                <p>Analista de Mejora Continua</p>
+            </div>
+            <div class="tarjeta-miembro">
+                <img src="imagenes/comite/suplente-3.png" alt="Alvaro Jiménez Claudio Yerson" class="foto-miembro">
+                <h4>Alvaro Jiménez Claudio Yerson</h4>
+                <p>Logistics Senior Operator</p>
+            </div>
+            <div class="tarjeta-miembro">
+                <img src="imagenes/comite/suplente-4.png" alt="Mamani Vilca Elvis Omar" class="foto-miembro">
+                <h4>Mamani Vilca Elvis Omar</h4>
+                <p>Logistics Assistant</p>
+            </div>
+            <div class="tarjeta-miembro">
+                <img src="imagenes/comite/suplente-5.png" alt="Mamani Raya Rudy Gabriela" class="foto-miembro">
+                <h4>Mamani Raya Rudy Gabriela</h4>
+                <p>Asistente de Ruteo</p>
+            </div>
+            <div class="tarjeta-miembro">
+                <img src="imagenes/comite/suplente-6.png" alt="Vivas Pineda Nataly Milagros" class="foto-miembro">
+                <h4>Vivas Pineda Nataly Milagros</h4>
+                <p>Project Manager Procesos</p>
+            </div>
+        </div>
+    </section>
+
+    <script src="errores.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', exigirSesion);
+    </script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PreviCheck | Portal de Seguridad</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="index.css">
+    <link rel="icon" href="imagenes/logotipo.png" type="image">
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('previcheck-tema') || 'dark');</script>
+</head>
+<body>
+
+    <div class="portal-wrap">
+
+        <!-- ===================== LOGIN ===================== -->
+        <div class="login-card" id="loginCard">
+            <div class="logo-container">
+                <img src="imagenes/logo.png" alt="HOME Delivery Logistics" class="logo-img">
+            </div>
+            <h1>Bienvenido a PreviCheck</h1>
+            <p class="subtexto">Ingresa tus credenciales para continuar</p>
+
+            <form id="formLogin" onsubmit="return manejarLogin(event)">
+                <div class="form-group">
+                    <label for="usuario">Correo electrónico</label>
+                    <input type="email" id="usuario" class="form-control" placeholder="nombre@falabella.com" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="clave">Contraseña</label>
+                    <input type="password" id="clave" class="form-control" placeholder="Contraseña" autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-action btn-login-submit">Ingresar</button>
+            </form>
+
+            <p class="login-nota">Acceso restringido al personal autorizado de HOME Delivery Logistics.<br><a href="privacidad.html" class="link-privacidad">Política de Privacidad</a></p>
+        </div>
+
+        <!-- ===================== MENÚ DE MÓDULOS ===================== -->
+        <div id="menuModulos">
+            <div class="menu-header">
+                <h1>¿A qué módulo deseas ingresar?</h1>
+                <button type="button" class="btn-sm btn-edit" onclick="cerrarSesion()">🚪 Cerrar sesión</button>
+            </div>
+
+            <div class="modulos-grid">
+                <div class="modulo-card">
+                    <div class="modulo-icono">🦺</div>
+                    <h3>Capacitaciones de Seguridad</h3>
+                    <p>Registro de charlas, asistentes y evidencias.</p>
+                    <a href="capacitaciones.html" class="btn-action">Ingresar</a>
+                </div>
+
+                <div class="modulo-card">
+                    <div class="modulo-icono">🔒</div>
+                    <h3>Control de Precintos</h3>
+                    <p>Seguimiento y verificación de precintos de seguridad.</p>
+                    <a href="precintos.html" class="btn-action">Ingresar</a>
+                </div>
+
+                <div class="modulo-card">
+                    <div class="modulo-icono">📹</div>
+                    <h3>Estadísticas CCTV</h3>
+                    <p>Indicadores y reportes del sistema de cámaras.</p>
+                    <a href="cctv.html" class="btn-action">Ingresar</a>
+                </div>
+
+                <div class="modulo-card">
+                    <div class="modulo-icono">🗄️</div>
+                    <h3>Control de Casilleros</h3>
+                    <p>Registro y estado de los 180 casilleros del personal.</p>
+                    <a href="casilleros.html" class="btn-action">Ingresar</a>
+                </div>
+
+                <div class="modulo-card">
+                    <div class="modulo-icono">🛡️</div>
+                    <h3>Comité de Seguridad</h3>
+                    <p>Miembros titulares y suplentes del Comité de Seguridad.</p>
+                    <a href="comite.html" class="btn-action">Ingresar</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="errores.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script>
+        async function manejarLogin(e) {
+            e.preventDefault();
+            if (!validarCamposRequeridos(['usuario', 'clave'])) return false;
+
+            const correo = document.getElementById('usuario').value.trim();
+            const clave = document.getElementById('clave').value;
+            const btn = document.querySelector('#formLogin button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Ingresando...';
+
+            const { error } = await supabaseClient.auth.signInWithPassword({ email: correo, password: clave });
+
+            if (error) {
+                btn.disabled = false;
+                btn.textContent = 'Ingresar';
+                mostrarAviso('Correo o contraseña incorrectos. Verifica e inténtalo nuevamente.', 'error');
+                document.getElementById('clave').value = '';
+                document.getElementById('clave').focus();
+                return false;
+            }
+
+            const perfil = await obtenerPerfilActual();
+            btn.disabled = false;
+            btn.textContent = 'Ingresar';
+
+            if (!perfil) {
+                mostrarAviso('Tu cuenta no tiene un perfil asignado. Contacta al administrador.', 'error', 7000);
+                await supabaseClient.auth.signOut();
+                return false;
+            }
+
+            sessionStorage.setItem('rolUsuario', perfil.rol);
+            sessionStorage.setItem('nombreUsuario', perfil.nombre);
+            mostrarAviso(`Bienvenido/a, ${perfil.nombre}.`, 'exito');
+            mostrarMenu();
+            return false;
+        }
+
+        function mostrarMenu() {
+            document.getElementById('loginCard').style.display = 'none';
+            document.getElementById('menuModulos').style.display = 'block';
+        }
+
+        async function cerrarSesion() {
+            await supabaseClient.auth.signOut();
+            sessionStorage.removeItem('rolUsuario');
+            sessionStorage.removeItem('nombreUsuario');
+            document.getElementById('menuModulos').style.display = 'none';
+            document.getElementById('loginCard').style.display = 'block';
+            document.getElementById('formLogin').reset();
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                if (!sessionStorage.getItem('rolUsuario')) {
+                    const perfil = await obtenerPerfilActual();
+                    if (perfil) {
+                        sessionStorage.setItem('rolUsuario', perfil.rol);
+                        sessionStorage.setItem('nombreUsuario', perfil.nombre);
+                    }
+                }
+                mostrarMenu();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+/* ==========================================================
+   ESTILOS — privacidad.html
+   ========================================================== */
+
+.header-acciones {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-header-inicio {
+    background-color: #475569;
+}
+
+.contenido-privacidad {
+    max-width: 760px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+
+.fecha-actualizacion {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 24px;
+}
+
+.contenido-privacidad section {
+    margin-bottom: 22px;
+}
+
+.contenido-privacidad h3 {
+    color: var(--title-color);
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.contenido-privacidad p,
+.contenido-privacidad li {
+    color: var(--text-color);
+    font-size: 14px;
+}
+
+.contenido-privacidad ul {
+    padding-left: 22px;
+    margin-top: 8px;
+}
+
+.contenido-privacidad li {
+    margin-bottom: 6px;
+}
