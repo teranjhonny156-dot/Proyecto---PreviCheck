@@ -151,6 +151,7 @@
             <input type="text" id="filtroTextoDetalle" class="form-control input-filtro-texto" placeholder="Buscar por folio, mercadería o solicitante..." oninput="renderizarTablaDetalleFiltrada()">
             <select id="filtroResolucionDetalle" class="form-control select-filtro" onchange="renderizarTablaDetalleFiltrada()"></select>
             <select id="filtroOperadorDetalle" class="form-control select-filtro" onchange="renderizarTablaDetalleFiltrada()"></select>
+            <button type="button" class="btn-sm btn-edit" onclick="exportarExcelCCTV()">⬇️ Exportar a Excel</button>
         </div>
 
         <div class="table-scroll-container">
@@ -194,8 +195,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
         let casosCache = [];
+        let ultimaListaFiltrada = [];
         let charts = {};
 
         // Tema oscuro para Chart.js: texto y líneas de cuadrícula claras sobre fondo oscuro
@@ -609,7 +612,32 @@
                 return coincideTexto && coincideResolucion && coincideOperador;
             });
 
+            ultimaListaFiltrada = lista;
             renderizarTablaDetalle(lista);
+        }
+
+        function exportarExcelCCTV() {
+            if (ultimaListaFiltrada.length === 0) { mostrarAviso('No hay casos para exportar con los filtros actuales.', 'advertencia'); return; }
+
+            const filas = ultimaListaFiltrada.map(c => ({
+                Folio: c.folio,
+                'Descripción Mercadería': c.descripcion_mercaderia,
+                'Precio Mercadería': c.precio_mercaderia,
+                'Fecha Solicitud': c.fecha_solicitud || '',
+                'Fecha Respuesta': c.fecha_respuesta || '',
+                Resolución: c.resolucion,
+                'Detalle Resolución': c.detalle_resolucion || '',
+                'Incidente Seguridad': c.incidente_seguridad,
+                'Resolución Final (link)': c.resolucion_final || '',
+                Operador: c.operador,
+                Solicitante: c.solicitante,
+            }));
+
+            const hoja = XLSX.utils.json_to_sheet(filas);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, 'CCTV');
+            const fecha = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(libro, `cctv_${fecha}.xlsx`);
         }
 
         /* ---------- Orquestador general ---------- */

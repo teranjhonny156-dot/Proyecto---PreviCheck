@@ -119,91 +119,7 @@ async function listarTodasLasFilas(tabla, columnaOrden, ascendente = false, cont
     return todas;
 }
 
-/* ---------- 3. Capacitaciones ---------- */
-async function listarCapacitaciones() {
-    return await listarTodasLasFilas('capacitaciones', 'creado_en', false, 'listando capacitaciones');
-}
-
-async function guardarCapacitacionRemota(registro, idExistente) {
-    if (idExistente) {
-        const { error } = await supabaseClient.from('capacitaciones').update(registro).eq('id', idExistente);
-        if (error) { manejarErrorSupabase(error, 'actualizando capacitación'); return false; }
-    } else {
-        const { error } = await supabaseClient.from('capacitaciones').insert(registro);
-        if (error) { manejarErrorSupabase(error, 'creando capacitación'); return false; }
-    }
-    return true;
-}
-
-async function eliminarCapacitacionRemota(id) {
-    const { error } = await supabaseClient.from('capacitaciones').delete().eq('id', id);
-    if (error) { manejarErrorSupabase(error, 'eliminando capacitación'); return false; }
-    return true;
-}
-
-/* ---------- 4. Personal maestro ---------- */
-async function listarPersonalMaestro() {
-    return await listarTodasLasFilas('personal_maestro', 'nombre', true, 'listando personal');
-}
-
-async function agregarPersonalMaestro(nombre) {
-    const { error } = await supabaseClient.from('personal_maestro').insert({ nombre });
-    if (error) {
-        if (error.code === '23505') {
-            mostrarAviso('Este colaborador ya se encuentra registrado en el padrón.', 'advertencia');
-        } else {
-            manejarErrorSupabase(error, 'agregando colaborador');
-        }
-        return false;
-    }
-    return true;
-}
-
-async function eliminarPersonalMaestro(id) {
-    const { error } = await supabaseClient.from('personal_maestro').delete().eq('id', id);
-    if (error) { manejarErrorSupabase(error, 'eliminando colaborador'); return false; }
-    return true;
-}
-
-/* ---------- 5. Cumplimiento anual ---------- */
-async function listarCumplimiento() {
-    return await listarTodasLasFilas('cumplimiento_anual', 'nombre', true, 'listando cumplimiento');
-}
-
-async function actualizarCumplimiento(id, campos) {
-    const { error } = await supabaseClient.from('cumplimiento_anual').update(campos).eq('id', id);
-    if (error) { manejarErrorSupabase(error, 'actualizando cumplimiento'); return false; }
-    return true;
-}
-
-async function sembrarCumplimientoInicial(nombres) {
-    const filas = nombres.map(nombre => ({ nombre, c1: true, c2: true, c3: true, c4: false, c5: false }));
-    const { error } = await supabaseClient
-        .from('cumplimiento_anual')
-        .upsert(filas, { onConflict: 'nombre', ignoreDuplicates: true });
-    if (error) console.error('[supabase-config] Error sembrando cumplimiento inicial:', error);
-}
-
-/* ---------- 6. Archivos (Storage) ---------- */
-async function subirArchivo(file, carpeta) {
-    const rutaLimpia = `${carpeta}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
-    const { error: errorSubida } = await supabaseClient.storage.from('evidencias').upload(rutaLimpia, file);
-    if (errorSubida) { manejarErrorSupabase(errorSubida, 'subiendo archivo'); return null; }
-
-    const { data, error: errorUrl } = await supabaseClient
-        .storage.from('evidencias')
-        .createSignedUrl(rutaLimpia, 60 * 60 * 24 * 365); // válido 1 año
-    if (errorUrl) { manejarErrorSupabase(errorUrl, 'generando enlace de archivo'); return null; }
-
-    return { nombre: file.name, ruta: rutaLimpia, url: data.signedUrl };
-}
-
-async function eliminarArchivo(ruta) {
-    if (!ruta) return;
-    const { error } = await supabaseClient.storage.from('evidencias').remove([ruta]);
-    if (error) console.error('[supabase-config] Error eliminando archivo:', error);
-}
-/* ---------- 7. Casos CCTV ---------- */
+/* ---------- 3. Casos CCTV ---------- */
 async function listarCasosCCTV() {
     return await listarTodasLasFilas('estadisticas_cctv', 'fecha_solicitud', false, 'listando casos CCTV');
 }
@@ -224,7 +140,7 @@ async function eliminarCasoCCTVRemoto(id) {
     if (error) { manejarErrorSupabase(error, 'eliminando caso CCTV'); return false; }
     return true;
 }
-/* ---------- 8. Casilleros ---------- */
+/* ---------- 4. Casilleros ---------- */
 async function listarCasilleros() {
     let data = await listarTodasLasFilas('casilleros', 'numero', true, 'listando casilleros');
 
@@ -246,7 +162,7 @@ async function actualizarCasillero(id, campos) {
     return true;
 }
 
-/* ---------- 9. Inspecciones de casilleros ---------- */
+/* ---------- 5. Inspecciones de casilleros ---------- */
 async function listarInspeccionesCasilleros() {
     return await listarTodasLasFilas('inspecciones_casilleros', 'fecha', false, 'listando inspecciones');
 }
@@ -263,7 +179,7 @@ async function eliminarInspeccionCasillero(id) {
     return true;
 }
 
-/* ---------- 10. Precintos ---------- */
+/* ---------- 6. Precintos ---------- */
 async function listarPrecintos() {
     return await listarTodasLasFilas('precintos', 'fecha', false, 'listando precintos');
 }
@@ -285,131 +201,37 @@ async function eliminarPrecintoRemoto(id) {
     return true;
 }
 
-/* ---------- 11. Opciones de Destino (lista editable de precintos.html) ---------- */
-async function listarOpcionesDestino() {
-    return await listarTodasLasFilas('opciones_destino', 'valor', true, 'listando destinos');
+/* ---------- 7. Listas editables de precintos.html (destino, encargado, color) ---------- */
+/**
+ * Funciones genéricas para cualquier "lista editable" de precintos.html
+ * (destino, encargado, color...). Cada una vive en su propia tabla
+ * (misma estructura: id + valor), así que basta con pasar el nombre
+ * de la tabla en vez de duplicar estas 3 funciones para cada lista.
+ */
+async function listarOpciones(tabla) {
+    return await listarTodasLasFilas(tabla, 'valor', true, `listando ${tabla}`);
 }
 
-async function agregarOpcionDestino(valor) {
-    const { error } = await supabaseClient.from('opciones_destino').insert({ valor: valor.toUpperCase() });
+async function agregarOpcion(tabla, valor) {
+    const { error } = await supabaseClient.from(tabla).insert({ valor: valor.toUpperCase() });
     if (error) {
         if (error.code === '23505') {
-            mostrarAviso('Ese destino ya existe en la lista.', 'advertencia');
+            mostrarAviso('Esa opción ya existe en la lista.', 'advertencia');
         } else {
-            manejarErrorSupabase(error, 'agregando destino');
+            manejarErrorSupabase(error, `agregando a ${tabla}`);
         }
         return false;
     }
     return true;
 }
 
-async function eliminarOpcionDestino(id) {
-    const { error } = await supabaseClient.from('opciones_destino').delete().eq('id', id);
-    if (error) { manejarErrorSupabase(error, 'eliminando destino'); return false; }
+async function eliminarOpcion(tabla, id) {
+    const { error } = await supabaseClient.from(tabla).delete().eq('id', id);
+    if (error) { manejarErrorSupabase(error, `eliminando de ${tabla}`); return false; }
     return true;
 }
 
-/* ---------- 12. Control de Ingresos ---------- */
-
-/** Busca un DNI puntual en el directorio (no trae toda la tabla — sería lentísimo con miles de filas). */
-async function buscarEnDirectorio(dni) {
-    const { data, error } = await supabaseClient
-        .from('personal_directorio')
-        .select('*')
-        .eq('dni', dni)
-        .maybeSingle();
-    if (error) { manejarErrorSupabase(error, 'buscando en el directorio'); return null; }
-    return data;
-}
-
-async function guardarEnDirectorio(registro) {
-    const { error } = await supabaseClient
-        .from('personal_directorio')
-        .upsert(registro, { onConflict: 'dni' });
-    if (error) { manejarErrorSupabase(error, 'guardando en el directorio'); return false; }
-    return true;
-}
-
-/** Trae solo los ingresos SIN salida registrada (personal que sigue dentro), más recientes primero. */
-async function listarIngresosAbiertos() {
-    const { data, error } = await supabaseClient
-        .from('control_ingresos')
-        .select('*')
-        .is('fecha_salida', null)
-        .order('fecha_ingreso', { ascending: false });
-    if (error) { manejarErrorSupabase(error, 'listando ingresos abiertos'); return []; }
-    return data || [];
-}
-
-/** Trae los últimos N ingresos (para el historial), sin importar si ya salieron o no. */
-async function listarIngresosRecientes(limite = 200) {
-    const { data, error } = await supabaseClient
-        .from('control_ingresos')
-        .select('*')
-        .order('fecha_ingreso', { ascending: false })
-        .limit(limite);
-    if (error) { manejarErrorSupabase(error, 'listando ingresos recientes'); return []; }
-    return data || [];
-}
-
-async function registrarIngreso(registro) {
-    const { data, error } = await supabaseClient.from('control_ingresos').insert(registro).select().single();
-    if (error) { manejarErrorSupabase(error, 'registrando ingreso'); return null; }
-    return data;
-}
-
-async function registrarSalidaIngreso(id, fechaSalida) {
-    const { error } = await supabaseClient.from('control_ingresos').update({ fecha_salida: fechaSalida }).eq('id', id);
-    if (error) { manejarErrorSupabase(error, 'registrando salida'); return false; }
-    return true;
-}
-
-/* ---------- 13. Retiro de Equipos (PDA) ---------- */
-async function listarEquiposPDA() {
-    return await listarTodasLasFilas('equipos_pda', 'fecha_retiro', false, 'listando equipos PDA');
-}
-
-async function registrarRetiroPDA(registro) {
-    const { error } = await supabaseClient.from('equipos_pda').insert(registro);
-    if (error) { manejarErrorSupabase(error, 'registrando retiro de equipo'); return false; }
-    return true;
-}
-
-async function registrarRetornoPDA(id, fechaRetorno) {
-    const { error } = await supabaseClient.from('equipos_pda').update({ fecha_retorno: fechaRetorno, estado: 'devuelto' }).eq('id', id);
-    if (error) { manejarErrorSupabase(error, 'registrando retorno de equipo'); return false; }
-    return true;
-}
-
-/* ---------- 14. Personal Restringido ---------- */
-async function listarPersonalRestringido() {
-    return await listarTodasLasFilas('personal_restringido', 'nombres_apellidos', true, 'listando personal restringido');
-}
-
-async function agregarPersonalRestringido(registro) {
-    const { error } = await supabaseClient.from('personal_restringido').insert(registro);
-    if (error) { manejarErrorSupabase(error, 'agregando personal restringido'); return false; }
-    return true;
-}
-
-async function eliminarPersonalRestringido(id) {
-    const { error } = await supabaseClient.from('personal_restringido').delete().eq('id', id);
-    if (error) { manejarErrorSupabase(error, 'eliminando personal restringido'); return false; }
-    return true;
-}
-
-/** Verifica si un DNI está en la lista de personal restringido. */
-async function estaEnListaRestringida(dni) {
-    const { data, error } = await supabaseClient
-        .from('personal_restringido')
-        .select('id')
-        .eq('dni', dni)
-        .maybeSingle();
-    if (error) { manejarErrorSupabase(error, 'verificando personal restringido'); return false; }
-    return !!data;
-}
-
-/* ---------- 15. Personal por Área + Capacitaciones Obligatorias ---------- */
+/* ---------- 8. Personal por Área + Capacitaciones Obligatorias ---------- */
 async function listarPersonalCapacitaciones() {
     return await listarTodasLasFilas('personal_capacitaciones', 'area', true, 'listando personal de capacitaciones');
 }

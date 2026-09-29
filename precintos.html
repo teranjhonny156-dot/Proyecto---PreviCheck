@@ -141,19 +141,16 @@
                     </div>
                     <div class="form-group">
                         <label>Color</label>
-                        <select id="color" class="form-control">
-                            <option value="NARANJA">Naranja</option>
-                            <option value="AZUL">Azul</option>
-                            <option value="VERDE">Verde</option>
-                            <option value="ROJO">Rojo</option>
-                            <option value="AMARILLO">Amarillo</option>
-                        </select>
+                        <div class="destino-input-row">
+                            <select id="color" class="form-control"></select>
+                            <button type="button" class="btn-sm btn-edit btn-gestionar-destinos" onclick="abrirModalGestion('color')" data-solo-editor="ocultar" title="Gestionar colores">⚙️</button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Destino</label>
                         <div class="destino-input-row">
                             <select id="destino" class="form-control" required></select>
-                            <button type="button" class="btn-sm btn-edit btn-gestionar-destinos" onclick="abrirModalDestinos()" data-solo-editor="ocultar" title="Gestionar destinos">⚙️</button>
+                            <button type="button" class="btn-sm btn-edit btn-gestionar-destinos" onclick="abrirModalGestion('destino')" data-solo-editor="ocultar" title="Gestionar destinos">⚙️</button>
                         </div>
                     </div>
                     <div class="form-group">
@@ -162,7 +159,10 @@
                     </div>
                     <div class="form-group">
                         <label>Encargado de Prevención</label>
-                        <select id="encargado" class="form-control" required></select>
+                        <div class="destino-input-row">
+                            <select id="encargado" class="form-control" required></select>
+                            <button type="button" class="btn-sm btn-edit btn-gestionar-destinos" onclick="abrirModalGestion('encargado')" data-solo-editor="ocultar" title="Gestionar encargados">⚙️</button>
+                        </div>
                     </div>
                 </div>
 
@@ -174,6 +174,7 @@
             <input type="text" id="filtroTextoDetalle" class="form-control input-filtro-texto" placeholder="Buscar por placa, conductor o almacén..." oninput="renderizarTablaDetalleFiltrada()">
             <select id="filtroDestinoDetalle" class="form-control select-filtro" onchange="renderizarTablaDetalleFiltrada()"></select>
             <select id="filtroOperacionDetalle" class="form-control select-filtro" onchange="renderizarTablaDetalleFiltrada()"></select>
+            <button type="button" class="btn-sm btn-edit" onclick="exportarExcelPrecintos()">⬇️ Exportar a Excel</button>
         </div>
 
         <div class="table-scroll-container">
@@ -203,19 +204,19 @@
         </div>
     </div>
 
-    <!-- MODAL — Gestionar destinos -->
-    <div id="modalDestinos" class="modal-overlay">
+    <!-- MODAL — Gestionar listas editables (destino / encargado / color) -->
+    <div id="modalGestionOpciones" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Gestionar Destinos</h3>
-                <span class="close-modal" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalDestinos()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cerrarModalDestinos()}">&times;</span>
+                <h3 id="tituloModalGestion">Gestionar Opciones</h3>
+                <span class="close-modal" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalGestion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cerrarModalGestion()}">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="form-group-inline">
-                    <input type="text" id="inputNuevoDestino" class="form-control" placeholder="Nuevo destino (ej: LIMA NORTE)" onkeydown="if(event.key==='Enter'){event.preventDefault(); agregarDestino();}">
-                    <button type="button" class="btn btn-primary" onclick="agregarDestino()">Agregar</button>
+                    <input type="text" id="inputNuevaOpcion" class="form-control" placeholder="Nueva opción" onkeydown="if(event.key==='Enter'){event.preventDefault(); agregarOpcionModal();}">
+                    <button type="button" class="btn btn-primary" onclick="agregarOpcionModal()">Agregar</button>
                 </div>
-                <ul class="lista-modal-docs" id="listaDestinosModal"></ul>
+                <ul class="lista-modal-docs" id="listaModalGestion"></ul>
             </div>
         </div>
     </div>
@@ -224,9 +225,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
         let precintosCache = [];
-        let destinosCache = [];
+        let ultimaListaFiltrada = [];
+
         let charts = {};
 
         // Tema oscuro para Chart.js: texto y líneas de cuadrícula claras sobre fondo oscuro
@@ -243,82 +246,112 @@
         });
 
         const OPERACIONES = ['DESPACHO', 'TRANSFERENCIA', 'DEVOLUCIONES'];
-        const ENCARGADOS = ['Ana Flores', 'Eduardo Solano', 'José Hernandez', 'Jhonny Teran', 'Flor Lopez', 'Agente ISEG'];
 
         function poblarSelectsEstaticos() {
             document.getElementById('operacion').innerHTML =
                 '<option value="">-- Seleccionar --</option>' +
                 OPERACIONES.map(o => `<option value="${o}">${o}</option>`).join('');
 
-            document.getElementById('encargado').innerHTML =
-                '<option value="">-- Seleccionar --</option>' +
-                ENCARGADOS.map(e => `<option value="${e}">${e}</option>`).join('');
-
             document.getElementById('filtroOperacionDetalle').innerHTML =
                 '<option value="todos">Todas las operaciones</option>' +
                 OPERACIONES.map(o => `<option value="${o}">${o}</option>`).join('');
         }
 
-        /* ---------- Destinos: lista editable ---------- */
-        async function cargarOpcionesDestino() {
-            destinosCache = await listarOpcionesDestino();
-            poblarSelectsDestino();
+        /* ---------- Listas editables: destino, encargado, color ----------
+           Un solo sistema genérico para las 3 (en vez de repetir el mismo
+           código de "agregar / eliminar / listar" tres veces). */
+        const CONFIG_LISTAS = {
+            destino: {
+                tabla: 'opciones_destino', titulo: 'Gestionar Destinos',
+                placeholder: 'Nuevo destino (ej: LIMA NORTE)',
+                selects: ['destino'], filtros: ['filtroDestinoDetalle'], filtroTodos: 'Todos los destinos'
+            },
+            encargado: {
+                tabla: 'opciones_encargado', titulo: 'Gestionar Encargados de Prevención',
+                placeholder: 'Nuevo encargado (ej: Juan Pérez)',
+                selects: ['encargado'], filtros: [], filtroTodos: ''
+            },
+            color: {
+                tabla: 'opciones_color', titulo: 'Gestionar Colores',
+                placeholder: 'Nuevo color (ej: MORADO)',
+                selects: ['color'], filtros: [], filtroTodos: ''
+            }
+        };
+
+        let opcionesCache = {};
+        let listaActual = null;
+
+        async function cargarOpciones(nombreLista) {
+            opcionesCache[nombreLista] = await listarOpciones(CONFIG_LISTAS[nombreLista].tabla);
+            poblarSelectsLista(nombreLista);
         }
 
-        function poblarSelectsDestino() {
-            const opciones = destinosCache.map(d => `<option value="${d.valor}">${d.valor}</option>`).join('');
-            const valorDestino = document.getElementById('destino').value;
-            const valorFiltro = document.getElementById('filtroDestinoDetalle').value;
+        function poblarSelectsLista(nombreLista) {
+            const cfg = CONFIG_LISTAS[nombreLista];
+            const lista = opcionesCache[nombreLista] || [];
+            const opcionesHtml = lista.map(o => `<option value="${o.valor}">${o.valor}</option>`).join('');
 
-            document.getElementById('destino').innerHTML = '<option value="">-- Seleccionar --</option>' + opciones;
-            document.getElementById('filtroDestinoDetalle').innerHTML = '<option value="todos">Todos los destinos</option>' + opciones;
+            cfg.selects.forEach(idSel => {
+                const el = document.getElementById(idSel);
+                const valorActual = el.value;
+                el.innerHTML = '<option value="">-- Seleccionar --</option>' + opcionesHtml;
+                if (lista.some(o => o.valor === valorActual)) el.value = valorActual;
+            });
 
-            if (destinosCache.some(d => d.valor === valorDestino)) document.getElementById('destino').value = valorDestino;
-            if (valorFiltro && destinosCache.some(d => d.valor === valorFiltro)) document.getElementById('filtroDestinoDetalle').value = valorFiltro;
+            cfg.filtros.forEach(idFiltro => {
+                const el = document.getElementById(idFiltro);
+                const valorActual = el.value;
+                el.innerHTML = `<option value="todos">${cfg.filtroTodos}</option>` + opcionesHtml;
+                if (valorActual && lista.some(o => o.valor === valorActual)) el.value = valorActual;
+            });
         }
 
-        function abrirModalDestinos() {
-            renderizarListaDestinosModal();
-            document.getElementById('modalDestinos').style.display = 'flex';
+        function abrirModalGestion(nombreLista) {
+            listaActual = nombreLista;
+            document.getElementById('tituloModalGestion').textContent = CONFIG_LISTAS[nombreLista].titulo;
+            document.getElementById('inputNuevaOpcion').placeholder = CONFIG_LISTAS[nombreLista].placeholder;
+            renderizarListaModalGestion();
+            document.getElementById('modalGestionOpciones').style.display = 'flex';
         }
 
-        function cerrarModalDestinos() {
-            document.getElementById('modalDestinos').style.display = 'none';
+        function cerrarModalGestion() {
+            document.getElementById('modalGestionOpciones').style.display = 'none';
         }
 
-        function renderizarListaDestinosModal() {
-            const ul = document.getElementById('listaDestinosModal');
-            if (destinosCache.length === 0) {
-                ul.innerHTML = '<li class="empty-state">Aún no hay destinos registrados.</li>';
+        function renderizarListaModalGestion() {
+            const ul = document.getElementById('listaModalGestion');
+            const lista = opcionesCache[listaActual] || [];
+            if (lista.length === 0) {
+                ul.innerHTML = '<li class="empty-state">Aún no hay opciones registradas.</li>';
                 return;
             }
-            ul.innerHTML = destinosCache.map(d => `
+            ul.innerHTML = lista.map(o => `
                 <li>
-                    <span>${d.valor}</span>
-                    <button type="button" class="btn-sm btn-delete" onclick="eliminarDestino(${d.id})" aria-label="Eliminar destino ${d.valor}">🗑️</button>
+                    <span>${o.valor}</span>
+                    <button type="button" class="btn-sm btn-delete" onclick="eliminarOpcionModal(${o.id})" aria-label="Eliminar ${o.valor}">🗑️</button>
                 </li>
             `).join('');
         }
 
-        async function agregarDestino() {
-            const input = document.getElementById('inputNuevoDestino');
+        async function agregarOpcionModal() {
+            const input = document.getElementById('inputNuevaOpcion');
             const valor = input.value.trim().toUpperCase();
-            if (!valor) { mostrarAviso('Escribe un nombre de destino.', 'advertencia'); return; }
+            if (!valor) { mostrarAviso('Escribe un valor.', 'advertencia'); return; }
 
-            if (await agregarOpcionDestino(valor)) {
+            if (await agregarOpcion(CONFIG_LISTAS[listaActual].tabla, valor)) {
                 input.value = '';
-                mostrarAviso('Destino agregado.', 'exito');
-                await cargarOpcionesDestino();
-                renderizarListaDestinosModal();
+                mostrarAviso('Opción agregada.', 'exito');
+                await cargarOpciones(listaActual);
+                renderizarListaModalGestion();
             }
         }
 
-        async function eliminarDestino(id) {
-            if (!confirm('¿Eliminar este destino de la lista? Los despachos ya guardados con ese destino no se modifican.')) return;
-            if (await eliminarOpcionDestino(id)) {
-                mostrarAviso('Destino eliminado.', 'exito');
-                await cargarOpcionesDestino();
-                renderizarListaDestinosModal();
+        async function eliminarOpcionModal(id) {
+            if (!confirm('¿Eliminar esta opción de la lista? Los despachos ya guardados con ese valor no se modifican.')) return;
+            if (await eliminarOpcion(CONFIG_LISTAS[listaActual].tabla, id)) {
+                mostrarAviso('Opción eliminada.', 'exito');
+                await cargarOpciones(listaActual);
+                renderizarListaModalGestion();
             }
         }
 
@@ -573,7 +606,33 @@
                 return coincideTexto && coincideDestino && coincideOperacion;
             });
 
+            ultimaListaFiltrada = lista;
             renderizarTablaDetalle(lista);
+        }
+
+        function exportarExcelPrecintos() {
+            if (ultimaListaFiltrada.length === 0) { mostrarAviso('No hay despachos para exportar con los filtros actuales.', 'advertencia'); return; }
+
+            const filas = ultimaListaFiltrada.map(p => ({
+                Fecha: p.fecha || '',
+                Hora: p.hora || '',
+                'CD/Almacén': p.cd_almacen,
+                Placa: p.placa,
+                Conductor: p.conductor,
+                'Precintos Totales': p.precintos_totales,
+                Laterales: p.precintos_laterales || '',
+                Posteriores: p.precintos_posteriores || '',
+                Color: p.color,
+                Destino: p.destino,
+                Operación: p.operacion,
+                Encargado: p.encargado,
+            }));
+
+            const hoja = XLSX.utils.json_to_sheet(filas);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, 'Precintos');
+            const fecha = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(libro, `precintos_${fecha}.xlsx`);
         }
 
         /* ---------- Orquestador general ---------- */
@@ -604,7 +663,8 @@
             const session = await exigirSesion();
             if (!session) return;
             poblarSelectsEstaticos();
-            await cargarOpcionesDestino();
+            await Promise.all([cargarOpciones('destino'), cargarOpciones('encargado'), cargarOpciones('color')]);
+            document.getElementById('color').value = 'NARANJA';
             document.getElementById('fecha').valueAsDate = new Date();
             await cargarYRenderizarTodo();
         });

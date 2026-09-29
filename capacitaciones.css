@@ -12,10 +12,6 @@
     background-color: #334155;
 }
 
-.btn-header-principal {
-    background-color: #475569;
-}
-
 .dashboard-columna-unica {
     grid-template-columns: 1fr;
 }
@@ -25,11 +21,12 @@
 }
 
 /* ----- Tarjetas KPI ----- */
-.kpi-container-4 {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
+.kpi-container-solo {
     margin-bottom: 20px;
+}
+
+.kpi-card-destacada {
+    max-width: 280px;
 }
 
 .kpi-card {
@@ -48,10 +45,6 @@
     border-radius: 6px;
 }
 .kpi-icono--neutro { background: var(--chip-bg); }
-.kpi-icono--verde   { background: var(--badge-verde-bg); color: var(--badge-verde-text); }
-.kpi-icono--rojo    { background: var(--badge-rojo-bg); color: var(--badge-rojo-text); }
-.kpi-icono--azul    { background: var(--badge-azul-bg); color: var(--badge-azul-text); }
-
 .kpi-label {
     font-size: 11px;
     color: #64748b;
@@ -64,10 +57,6 @@
     font-weight: 700;
 }
 .kpi-valor--neutro { color: var(--title-color); }
-.kpi-valor--verde   { color: #16a34a; }
-.kpi-valor--rojo    { color: #dc2626; }
-.kpi-valor--azul    { color: #0284c7; }
-
 /* ----- Barra de filtros ----- */
 .barra-filtros {
     display: flex;
@@ -129,22 +118,10 @@
    Ampliación — personal por área, gráficas circulares y CRUD
    ========================================================== */
 
-.graficas-grid-charlas {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 22px;
-}
-
-.grafica-card {
-    background: var(--card-background);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.3));
-    padding: 18px;
-    display: flex;
-    flex-direction: column;
-    height: 300px;
+/* Grilla de 7 gráficas circulares (una por capacitación) */
+.grafica-card-pequena .titulo-grafica {
+    font-size: 12px;
+    margin-bottom: 6px;
 }
 
 .grafica-canvas-wrap {
@@ -165,9 +142,11 @@
 .panel-formulario-persona {
     background: var(--card-background);
     border: 1px solid var(--border-color);
+    border-left: 4px solid var(--primary-color);
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 22px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
 }
 
 .titulo-formulario {
@@ -228,7 +207,6 @@
 }
 
 @media (max-width: 1024px) {
-    .graficas-grid-charlas { grid-template-columns: 1fr; }
     .grid-formulario-persona { grid-template-columns: 1fr 1fr; }
 }
 
@@ -318,4 +296,316 @@
     padding: 20px;
     max-height: 400px;
     overflow-y: auto;
+}
+
+/* ==========================================================
+   Tarjeta única de gráfica por capacitación + desglose por área
+   ========================================================== */
+.panel-grafica-unica {
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.3));
+    padding: 18px;
+    margin-bottom: 22px;
+}
+
+.grafica-header-controles {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.select-capacitacion-grafica {
+    width: 260px;
+    margin-bottom: 0;
+}
+
+.grafica-unica-contenido {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: center;
+}
+
+.grafica-canvas-grande {
+    position: relative;
+    height: 260px;
+}
+
+.titulo-desglose {
+    font-size: 13px;
+    color: var(--title-color);
+    margin-bottom: 10px;
+}
+
+.fila-desglose-area {
+    display: grid;
+    grid-template-columns: 140px 1fr 110px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.nombre-area-desglose {
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.barra-desglose-area {
+    position: relative;
+    background: var(--surface-2, #101a2e);
+    border-radius: 999px;
+    height: 26px;
+}
+
+.barra-desglose-relleno {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    transition: width 0.3s ease, background 0.3s ease;
+}
+
+.badge-desglose-area {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #ffffff;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+    transition: left 0.3s ease;
+}
+
+.valor-desglose-area {
+    color: var(--title-color);
+    font-weight: 700;
+    text-align: right;
+}
+
+.valor-desglose-area small {
+    color: var(--text-muted, #8aa0c2);
+    font-weight: 400;
+}
+
+/* ----- Carga masiva por Excel: dos columnas ----- */
+.carga-excel-columnas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.carga-excel-controles {
+    border-left: 1px solid var(--border-color);
+    padding-left: 20px;
+}
+
+.instrucciones-excel {
+    font-size: 12.5px;
+    color: var(--text-color);
+    line-height: 1.7;
+    margin-bottom: 0;
+    background: var(--surface-2, #f8fafc);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 12px 14px;
+}
+
+.instrucciones-excel code {
+    background: var(--chip-bg, #e2e8f0);
+    color: var(--home-azul, #1f8bc9);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.btn-plantilla-excel {
+    background: var(--badge-verde-bg);
+    color: var(--home-verde, #16a34a);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    font-weight: 700;
+    padding: 8px 14px;
+}
+
+.btn-plantilla-excel:hover {
+    filter: brightness(0.95);
+}
+
+.fila-carga-excel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.botones-carga-excel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+}
+
+.btn-plantilla-excel {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.input-archivo-excel {
+    height: 34px;
+    box-sizing: border-box;
+}
+
+.botones-carga-excel .btn-plantilla-excel,
+.botones-carga-excel .input-archivo-excel {
+    width: 100%;
+}
+
+.input-archivo-excel {
+    font-size: 12.5px;
+    color: var(--text-color);
+    background: var(--surface-2, #f8fafc);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 7px 10px;
+}
+
+.input-archivo-excel::file-selector-button {
+    background: var(--home-azul, #1f8bc9);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.input-archivo-excel::file-selector-button:hover {
+    background: #15679a;
+}
+
+.resultado-carga-excel {
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: var(--home-verde, #5db74b);
+    font-weight: 600;
+}
+
+.icono-decorativo-excel {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    opacity: 0.95;
+    flex-shrink: 0;
+    object-fit: cover;
+}
+
+@media (max-width: 1024px) {
+    .grafica-unica-contenido { grid-template-columns: 1fr; }
+    .fila-desglose-area { grid-template-columns: 110px 1fr 90px; }
+    .carga-excel-columnas { grid-template-columns: 1fr; }
+    .carga-excel-controles { border-left: none; padding-left: 0; border-top: 1px solid var(--border-color); padding-top: 16px; }
+}
+
+@media (max-width: 640px) {
+    .grafica-header-controles { flex-direction: column; align-items: stretch; }
+    .select-capacitacion-grafica { width: 100%; }
+    .fila-carga-excel { flex-direction: column; align-items: center; }
+}
+
+/* ==========================================================
+   Modal de validación previa (carga masiva por Excel)
+   ========================================================== */
+.modal-content-ancho {
+    max-width: 920px;
+    width: 95%;
+}
+
+.texto-ayuda-validacion {
+    font-size: 12.5px;
+    color: var(--text-muted, #8aa0c2);
+    margin-bottom: 12px;
+}
+
+.resumen-validacion-excel {
+    font-size: 13px;
+    color: var(--title-color);
+    margin-bottom: 14px;
+}
+
+.chip-resumen {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 6px;
+}
+.chip-nuevo    { background: var(--badge-verde-bg); color: var(--badge-verde-text); }
+.chip-actualiza { background: var(--badge-azul-bg); color: var(--badge-azul-text); }
+.chip-error    { background: var(--badge-rojo-bg); color: var(--badge-rojo-text); }
+
+.tabla-validacion-excel-wrap {
+    max-height: 340px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.tabla-validacion-excel-wrap table {
+    min-width: 720px;
+    margin-top: 0;
+}
+
+.fila-invalida-excel {
+    background: var(--badge-rojo-bg);
+}
+
+.celda-puntos-cap {
+    white-space: nowrap;
+}
+
+.punto-cap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 9px;
+    font-weight: 700;
+    margin-right: 3px;
+    cursor: default;
+}
+.punto-completo  { background: var(--badge-verde-bg); color: var(--badge-verde-text); }
+.punto-pendiente  { background: var(--surface-2, #101a2e); color: var(--text-muted, #8aa0c2); }
+
+.leyenda-puntos-cap {
+    font-size: 11.5px;
+    color: var(--text-muted, #8aa0c2);
+    margin-bottom: 16px;
+}
+
+.botonera-modal-validacion {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
 }

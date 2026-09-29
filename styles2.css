@@ -189,6 +189,11 @@ input[type="checkbox"] {
     background-color: var(--chip-hover);
 }
 
+.btn-edit { background-color: var(--chip-bg); color: var(--title-color); }
+.btn-edit:hover { background-color: var(--chip-hover); }
+.btn-delete { background-color: var(--badge-rojo-bg); color: var(--badge-rojo-text); }
+.btn-delete:hover { filter: brightness(0.92); }
+
 .empty-state {
     text-align: center;
     padding: 30px;

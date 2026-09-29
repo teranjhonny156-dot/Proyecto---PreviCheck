@@ -17,7 +17,6 @@
         </div>
         <div class="header-acciones">
             <a href="index.html" class="btn-header btn-header-inicio-oscuro">🏠 Inicio</a>
-            <a href="comite.html" class="btn-header btn-header-principal">Comité de Seguridad</a>
         </div>
     </header>
 
@@ -26,45 +25,58 @@
     <div class="dashboard-container dashboard-columna-unica">
         <div class="panel-right panel-ancho-completo">
 
-            <div class="kpi-container-4">
-                <div class="kpi-card">
+            <div class="kpi-container-solo">
+                <div class="kpi-card kpi-card-destacada">
                     <div class="kpi-icono kpi-icono--neutro">👥</div>
                     <div>
                         <span class="kpi-label">Total Personal</span>
                         <h4 id="kpiTotalPersonal" class="kpi-valor kpi-valor--neutro">0</h4>
                     </div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-icono kpi-icono--verde">✅</div>
-                    <div>
-                        <span class="kpi-label">Completaron las 7</span>
-                        <h4 id="kpiCompletados" class="kpi-valor kpi-valor--verde">0</h4>
-                    </div>
+            </div>
+
+            <div class="panel-grafica-unica">
+                <div class="grafica-header-controles">
+                    <h3 class="titulo-grafica">Cumplimiento por Capacitación</h3>
+                    <select id="selectorCapacitacionGrafica" class="form-control select-capacitacion-grafica" onchange="renderizarGraficas()">
+                        <option value="c1">C1 · Primeros Auxilios</option>
+                        <option value="c2">C2 · Política SST / Mapa riesgo</option>
+                        <option value="c3">C3 · Riesgos Ergonómicos</option>
+                        <option value="c4">C4 · Uso de extintor</option>
+                        <option value="c5">C5 · Hipertensión/diabetes/obesidad</option>
+                        <option value="c6">C6 · Plan de emergencia</option>
+                        <option value="c7">C7 · Seguridad como forma de vida</option>
+                    </select>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-icono kpi-icono--rojo">⚠️</div>
-                    <div>
-                        <span class="kpi-label">Pendientes / Incompletos</span>
-                        <h4 id="kpiPendientes" class="kpi-valor kpi-valor--rojo">0</h4>
-                    </div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-icono kpi-icono--azul">📈</div>
-                    <div>
-                        <span class="kpi-label">% Cumplimiento Global</span>
-                        <h4 id="kpiPorcentaje" class="kpi-valor kpi-valor--azul">0%</h4>
+                <div class="grafica-unica-contenido">
+                    <div class="grafica-canvas-wrap grafica-canvas-grande"><canvas id="graficoCapacitacionUnica"></canvas></div>
+                    <div class="desglose-por-area">
+                        <h4 class="titulo-desglose">% de cumplimiento por área</h4>
+                        <div id="listaDesgloseArea"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="graficas-grid-charlas">
-                <div class="grafica-card">
-                    <h3 class="titulo-grafica">Cumplimiento General</h3>
-                    <div class="grafica-canvas-wrap"><canvas id="graficoCumplimiento"></canvas></div>
-                </div>
-                <div class="grafica-card">
-                    <h3 class="titulo-grafica">Personal por Área</h3>
-                    <div class="grafica-canvas-wrap"><canvas id="graficoPorArea"></canvas></div>
+            <div class="panel-formulario-persona" data-solo-editor="ocultar">
+                <h3 class="titulo-formulario">Carga Masiva desde Excel</h3>
+                <div class="carga-excel-columnas">
+                    <p class="instrucciones-excel">
+                        El archivo debe tener estas columnas exactas en la primera fila:
+                        <code>Area</code>, <code>DNI</code>, <code>Nombres</code>, <code>ApellidoPaterno</code>, <code>ApellidoMaterno</code>, <code>Cargo</code>,
+                        <code>C1</code>, <code>C2</code>, <code>C3</code>, <code>C4</code>, <code>C5</code>, <code>C6</code>, <code>C7</code>.
+                        En las columnas C1 a C7 escribe <strong>SI</strong> si esa persona ya realizó esa capacitación, o déjalo en blanco / escribe <strong>NO</strong> si está pendiente.
+                        Si el DNI ya existe en el sistema, se <strong>actualizan</strong> sus datos; si no existe, se <strong>agrega</strong> como personal nuevo.
+                    </p>
+                    <div class="carga-excel-controles">
+                        <div class="fila-carga-excel">
+                            <div class="botones-carga-excel">
+                                <button type="button" class="btn-sm btn-plantilla-excel" onclick="descargarPlantillaExcel()">⬇️ Descargar plantilla Excel</button>
+                                <input type="file" id="inputExcelPersonal" accept=".xlsx,.xls" class="input-archivo-excel" onchange="procesarArchivoExcel(this)">
+                            </div>
+                            <img src="imagenes/icono-carga-excel.png" alt="" class="icono-decorativo-excel">
+                        </div>
+                        <div id="resultadoCargaExcel" class="resultado-carga-excel"></div>
+                    </div>
                 </div>
             </div>
 
@@ -112,7 +124,23 @@
                         <option value="0">Sin ninguna (0/7)</option>
                         <option value="parcial">Parciales</option>
                     </select>
+                    <select id="filtroCapacitacionEspecifica" class="form-control select-area" onchange="renderizarMatriz()">
+                        <option value="todas">Todas las capacitaciones</option>
+                        <option value="c1">C1 · Primeros Auxilios</option>
+                        <option value="c2">C2 · Política SST / Mapa riesgo</option>
+                        <option value="c3">C3 · Riesgos Ergonómicos</option>
+                        <option value="c4">C4 · Uso de extintor</option>
+                        <option value="c5">C5 · Hipertensión/diabetes/obesidad</option>
+                        <option value="c6">C6 · Plan de emergencia</option>
+                        <option value="c7">C7 · Seguridad como forma de vida</option>
+                    </select>
+                    <select id="filtroEstadoCapacitacionEspecifica" class="form-control select-progreso" onchange="renderizarMatriz()">
+                        <option value="todos">Cualquier estado</option>
+                        <option value="completo">Completó</option>
+                        <option value="pendiente">Pendiente</option>
+                    </select>
                     <input type="text" id="filtroNombre" class="form-control input-nombre-filtro" placeholder="Buscar trabajador..." oninput="renderizarMatriz()">
+                    <button type="button" class="btn-sm btn-plantilla-excel" onclick="exportarExcelCapacitaciones()">⬇️ Exportar a Excel</button>
                 </div>
             </div>
 
@@ -125,13 +153,13 @@
                             <th>Trabajador</th>
                             <th>DNI</th>
                             <th>Cargo</th>
-                            <th>C1<br><span class="subtitulo-capacitacion">Primeros Auxilios</span></th>
-                            <th>C2<br><span class="subtitulo-capacitacion">Política SST / Mapa riesgo</span></th>
-                            <th>C3<br><span class="subtitulo-capacitacion">Riesgos Ergonómicos</span></th>
-                            <th>C4<br><span class="subtitulo-capacitacion">Uso de extintor</span></th>
-                            <th>C5<br><span class="subtitulo-capacitacion">Hipertensión/diabetes/obesidad</span></th>
-                            <th>C6<br><span class="subtitulo-capacitacion">Plan de emergencia</span></th>
-                            <th>C7<br><span class="subtitulo-capacitacion">Seguridad como forma de vida</span></th>
+                            <th class="col-cap col-c1">C1<br><span class="subtitulo-capacitacion">Primeros Auxilios</span></th>
+                            <th class="col-cap col-c2">C2<br><span class="subtitulo-capacitacion">Política SST / Mapa riesgo</span></th>
+                            <th class="col-cap col-c3">C3<br><span class="subtitulo-capacitacion">Riesgos Ergonómicos</span></th>
+                            <th class="col-cap col-c4">C4<br><span class="subtitulo-capacitacion">Uso de extintor</span></th>
+                            <th class="col-cap col-c5">C5<br><span class="subtitulo-capacitacion">Hipertensión/diabetes/obesidad</span></th>
+                            <th class="col-cap col-c6">C6<br><span class="subtitulo-capacitacion">Plan de emergencia</span></th>
+                            <th class="col-cap col-c7">C7<br><span class="subtitulo-capacitacion">Seguridad como forma de vida</span></th>
                             <th>Progreso</th>
                             <th>Estado</th>
                             <th>Acción</th>
@@ -188,15 +216,58 @@
         </div>
     </div>
 
+    <!-- MODAL — Validación previa de la carga masiva por Excel -->
+    <div id="modalValidacionExcel" class="modal-overlay">
+        <div class="modal-content modal-content-ancho">
+            <div class="modal-header">
+                <h3>Confirmar Carga de Personal</h3>
+                <span class="close-modal" role="button" tabindex="0" aria-label="Cerrar" onclick="cancelarCargaExcel()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cancelarCargaExcel()}">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p class="texto-ayuda-validacion">Revisa que el personal y sus capacitaciones se hayan leído correctamente antes de guardar. Nada se guarda todavía.</p>
+                <div id="resumenValidacionExcel" class="resumen-validacion-excel"></div>
+
+                <div class="table-scroll-container tabla-validacion-excel-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>DNI</th>
+                                <th>Nombre</th>
+                                <th>Área</th>
+                                <th>Cargo</th>
+                                <th>Capacitaciones</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyValidacionExcel"></tbody>
+                    </table>
+                </div>
+
+                <div class="leyenda-puntos-cap">
+                    <span class="punto-cap punto-completo">C</span> Completó &nbsp;&nbsp;
+                    <span class="punto-cap punto-pendiente">C</span> Pendiente
+                </div>
+
+                <div class="botonera-modal-validacion">
+                    <button type="button" class="btn-sm btn-edit" onclick="cancelarCargaExcel()">Cancelar</button>
+                    <button type="button" id="btnConfirmarCargaExcel" class="btn-action" onclick="confirmarCargaExcel()">Confirmar Carga</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="errores.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
         let registrosCache = [];
+        let ultimaListaFiltrada = [];
         let graficos = {};
 
-        const AREAS = ['RRHH', 'INGENIERIA', 'TRANSPORTE', 'OPERACIONES', 'PREVENCION Y RIESGO', 'CONTROL Y GESTION'];
+        const AREAS = ['RRHH', 'INGENIERIA', 'TRANSPORTE', 'OPERACIONES', 'PREVENCION Y RIESGO', 'CONTROL Y GESTION', 'REGIONAL'];
 
         function poblarSelectsArea() {
             const opciones = AREAS.map(a => `<option value="${a}">${a}</option>`).join('');
@@ -232,53 +303,88 @@
         }
 
         function actualizarEstadisticas() {
-            const total = registrosCache.length;
-            const completados = registrosCache.filter(item => sumaCumplimiento(item) === 7).length;
-            const pendientes = total - completados;
-            const totalPosible = total * 7;
-            const totalCumplido = registrosCache.reduce((acc, item) => acc + sumaCumplimiento(item), 0);
-            const porcentaje = totalPosible > 0 ? ((totalCumplido / totalPosible) * 100).toFixed(1) + '%' : '0%';
-
-            document.getElementById('kpiTotalPersonal').textContent = total;
-            document.getElementById('kpiCompletados').textContent = completados;
-            document.getElementById('kpiPendientes').textContent = pendientes;
-            document.getElementById('kpiPorcentaje').textContent = porcentaje;
+            document.getElementById('kpiTotalPersonal').textContent = registrosCache.length;
         }
+
+        const NOMBRES_CAPACITACIONES = {
+            c1: 'Primeros Auxilios',
+            c2: 'Política SST / Mapa riesgo',
+            c3: 'Riesgos Ergonómicos',
+            c4: 'Uso de extintor',
+            c5: 'Hipertensión/diabetes/obesidad',
+            c6: 'Plan de emergencia',
+            c7: 'Seguridad como forma de vida',
+        };
 
         function renderizarGraficas() {
             Object.values(graficos).forEach(g => g && g.destroy());
             graficos = {};
 
-            const completados = registrosCache.filter(item => sumaCumplimiento(item) === 7).length;
-            const pendientes = registrosCache.length - completados;
+            const campo = document.getElementById('selectorCapacitacionGrafica').value;
 
-            graficos.cumplimiento = new Chart(document.getElementById('graficoCumplimiento'), {
+            // ---- Gráfica circular: Completó / Pendiente para la capacitación elegida ----
+            const completados = registrosCache.filter(item => item[campo]).length;
+            const pendientes = registrosCache.length - completados;
+            const canvas = document.getElementById('graficoCapacitacionUnica');
+
+            graficos.unica = new Chart(canvas, {
                 type: 'pie',
                 data: {
-                    labels: ['Completos (7/7)', 'Pendientes'],
+                    labels: ['Completó', 'Pendiente'],
                     datasets: [{ data: [completados, pendientes], backgroundColor: ['#16a34a', '#dc2626'] }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: {
+                            display: true,
+                            text: `${NOMBRES_CAPACITACIONES[campo]} — ${completados} / ${registrosCache.length} completó`,
+                            font: { size: 13 }
+                        }
+                    }
+                }
             });
 
-            const conteoArea = {};
-            AREAS.forEach(a => conteoArea[a] = 0);
-            registrosCache.forEach(item => { if (conteoArea[item.area] !== undefined) conteoArea[item.area]++; });
+            // ---- Desglose: % de cumplimiento por área para esa misma capacitación ----
+            const contenedor = document.getElementById('listaDesgloseArea');
+            contenedor.innerHTML = '';
 
-            graficos.porArea = new Chart(document.getElementById('graficoPorArea'), {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(conteoArea),
-                    datasets: [{ data: Object.values(conteoArea), backgroundColor: ['#1f8bc9', '#5db74b', '#e21f7a', '#f59e0b', '#7c3aed', '#0d9488'] }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            AREAS.forEach(area => {
+                const personalArea = registrosCache.filter(item => item.area === area);
+                if (personalArea.length === 0) return;
+                const completadosArea = personalArea.filter(item => item[campo]).length;
+                const porcentaje = Math.round((completadosArea / personalArea.length) * 100);
+                const { gradiente, texto } = colorPorPorcentaje(porcentaje);
+
+                const fila = document.createElement('div');
+                fila.className = 'fila-desglose-area';
+                fila.innerHTML = `
+                    <span class="nombre-area-desglose">${area}</span>
+                    <div class="barra-desglose-area">
+                        <div class="barra-desglose-relleno" style="width: ${porcentaje}%; background: ${gradiente};"></div>
+                        <span class="badge-desglose-area" style="left: max(4px, calc(${porcentaje}% - 34px)); color: ${texto};">${porcentaje}%</span>
+                    </div>
+                    <span class="valor-desglose-area"><small>(${completadosArea}/${personalArea.length})</small></span>
+                `;
+                contenedor.appendChild(fila);
             });
+        }
+
+        /** ≥70% rosa (alto) · 40–69% azul (medio) · <40% verde (bajo) */
+        function colorPorPorcentaje(pct) {
+            if (pct >= 70) return { gradiente: 'linear-gradient(90deg, #e21f7a, #ff5fa8)', texto: '#99194f' };
+            if (pct >= 40) return { gradiente: 'linear-gradient(90deg, #1f8bc9, #5db0e6)', texto: '#0c447c' };
+            return { gradiente: 'linear-gradient(90deg, #5db74b, #8ad978)', texto: '#27500a' };
         }
 
         function renderizarMatriz() {
             const textoFiltro = document.getElementById('filtroNombre').value.toLowerCase().trim();
             const areaFiltro = document.getElementById('filtroArea').value;
             const progresoFiltro = document.getElementById('filtroProgreso').value;
+            const capacitacionFiltro = document.getElementById('filtroCapacitacionEspecifica').value;
+            const estadoCapacitacionFiltro = document.getElementById('filtroEstadoCapacitacionEspecifica').value;
 
             const filtrados = registrosCache.filter(item => {
                 const suma = sumaCumplimiento(item);
@@ -288,8 +394,18 @@
                 if (progresoFiltro === '7') cumpleProgreso = suma === 7;
                 else if (progresoFiltro === '0') cumpleProgreso = suma === 0;
                 else if (progresoFiltro === 'parcial') cumpleProgreso = suma > 0 && suma < 7;
-                return cumpleTexto && cumpleArea && cumpleProgreso;
+
+                let cumpleCapacitacion = true;
+                if (capacitacionFiltro !== 'todas') {
+                    const completoEsa = !!item[capacitacionFiltro];
+                    if (estadoCapacitacionFiltro === 'completo') cumpleCapacitacion = completoEsa;
+                    else if (estadoCapacitacionFiltro === 'pendiente') cumpleCapacitacion = !completoEsa;
+                }
+
+                return cumpleTexto && cumpleArea && cumpleProgreso && cumpleCapacitacion;
             });
+
+            ultimaListaFiltrada = filtrados;
 
             const tbody = document.getElementById('tbodyMatriz');
             tbody.innerHTML = '';
@@ -302,9 +418,14 @@
             const soloLectura = esLector();
             const deshabilitado = soloLectura ? 'disabled' : '';
 
+            const hayFiltroEspecifico = capacitacionFiltro !== 'todas';
+
             filtrados.forEach((item, index) => {
-                const suma = sumaCumplimiento(item);
-                const estadoCompleto = suma === 7;
+                // Si hay una capacitación específica filtrada, Progreso/Estado reflejan
+                // SOLO esa (0/1 o 1/1); si no, reflejan el total general (X/7).
+                const suma = hayFiltroEspecifico ? (item[capacitacionFiltro] ? 1 : 0) : sumaCumplimiento(item);
+                const totalReferencia = hayFiltroEspecifico ? 1 : 7;
+                const estadoCompleto = suma === totalReferencia;
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -313,14 +434,14 @@
                     <td><strong>${nombreCompleto(item)}</strong></td>
                     <td>${item.dni || '—'}</td>
                     <td>${item.cargo || '—'}</td>
-                    <td class="celda-centrada"><input type="checkbox" ${item.c1 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c1', this.checked)"></td>
-                    <td class="celda-centrada"><input type="checkbox" ${item.c2 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c2', this.checked)"></td>
-                    <td class="celda-centrada"><input type="checkbox" ${item.c3 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c3', this.checked)"></td>
-                    <td class="celda-centrada"><input type="checkbox" ${item.c4 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c4', this.checked)"></td>
-                    <td class="celda-centrada"><input type="checkbox" ${item.c5 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c5', this.checked)"></td>
-                    <td class="celda-centrada"><input type="checkbox" ${item.c6 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c6', this.checked)"></td>
-                    <td class="celda-centrada"><input type="checkbox" ${item.c7 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c7', this.checked)"></td>
-                    <td class="celda-centrada"><span class="valor-progreso ${suma === 7 ? 'progreso-completo' : 'progreso-pendiente'}">${suma} / 7</span></td>
+                    <td class="celda-centrada col-cap col-c1"><input type="checkbox" ${item.c1 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c1', this.checked)"></td>
+                    <td class="celda-centrada col-cap col-c2"><input type="checkbox" ${item.c2 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c2', this.checked)"></td>
+                    <td class="celda-centrada col-cap col-c3"><input type="checkbox" ${item.c3 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c3', this.checked)"></td>
+                    <td class="celda-centrada col-cap col-c4"><input type="checkbox" ${item.c4 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c4', this.checked)"></td>
+                    <td class="celda-centrada col-cap col-c5"><input type="checkbox" ${item.c5 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c5', this.checked)"></td>
+                    <td class="celda-centrada col-cap col-c6"><input type="checkbox" ${item.c6 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c6', this.checked)"></td>
+                    <td class="celda-centrada col-cap col-c7"><input type="checkbox" ${item.c7 ? 'checked' : ''} ${deshabilitado} onchange="cambiarEstado(${item.id}, 'c7', this.checked)"></td>
+                    <td class="celda-centrada"><span class="valor-progreso ${estadoCompleto ? 'progreso-completo' : 'progreso-pendiente'}">${suma} / ${totalReferencia}</span></td>
                     <td class="celda-centrada">
                         <span class="badge-estado ${estadoCompleto ? 'badge-completo' : 'badge-pendiente'}">
                             ${estadoCompleto ? 'COMPLETO' : 'PENDIENTE'}
@@ -336,16 +457,39 @@
                 `;
                 tbody.appendChild(tr);
             });
+
+            // Se aplica DESPUÉS de construir toda la tabla (encabezados + filas nuevas),
+            // para que headers y celdas queden ocultos/visibles de forma pareja.
+            aplicarVisibilidadColumnas(capacitacionFiltro);
+        }
+
+        function aplicarVisibilidadColumnas(filtro) {
+            document.querySelectorAll('.col-cap').forEach(el => {
+                el.style.display = (filtro === 'todas' || el.classList.contains(`col-${filtro}`)) ? '' : 'none';
+            });
         }
 
         async function cambiarEstado(id, campo, valor) {
             const ok = await actualizarPersonalCapacitaciones(id, { [campo]: valor });
-            if (ok) await cargarPersonal();
+            if (!ok) return;
+            // Actualiza solo en memoria (sin volver a pedir todo a Supabase) para que
+            // la fila no cambie de posición ni la tabla "salte" al marcar un check.
+            const item = registrosCache.find(r => r.id === id);
+            if (item) item[campo] = valor;
+            actualizarEstadisticas();
+            renderizarGraficas();
+            renderizarMatriz();
         }
 
         async function completarTodas(id) {
-            const ok = await actualizarPersonalCapacitaciones(id, { c1: true, c2: true, c3: true, c4: true, c5: true, c6: true, c7: true });
-            if (ok) await cargarPersonal();
+            const campos = { c1: true, c2: true, c3: true, c4: true, c5: true, c6: true, c7: true };
+            const ok = await actualizarPersonalCapacitaciones(id, campos);
+            if (!ok) return;
+            const item = registrosCache.find(r => r.id === id);
+            if (item) Object.assign(item, campos);
+            actualizarEstadisticas();
+            renderizarGraficas();
+            renderizarMatriz();
         }
 
         /* ---------- Agregar personal ---------- */
@@ -418,6 +562,214 @@
             if (!ok) return;
             mostrarAviso('Datos actualizados.', 'exito');
             cerrarModalPersona();
+            await cargarPersonal();
+        }
+
+        /* ============================================================
+           CARGA MASIVA DESDE EXCEL
+           ============================================================ */
+
+        const COLUMNAS_EXCEL = ['Area', 'DNI', 'Nombres', 'ApellidoPaterno', 'ApellidoMaterno', 'Cargo', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7'];
+
+        function descargarPlantillaExcel() {
+            const encabezado = [COLUMNAS_EXCEL];
+            const filaEjemplo = [['RRHH', '12345678', 'Juan Carlos', 'Perez', 'Gomez', 'Analista', 'SI', 'NO', 'SI', 'NO', 'NO', 'SI', 'NO']];
+            const hoja = XLSX.utils.aoa_to_sheet(encabezado.concat(filaEjemplo));
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, 'Personal');
+            XLSX.writeFile(libro, 'plantilla_personal_capacitaciones.xlsx');
+        }
+
+        function exportarExcelCapacitaciones() {
+            if (ultimaListaFiltrada.length === 0) { mostrarAviso('No hay personal para exportar con los filtros actuales.', 'advertencia'); return; }
+
+            const filas = ultimaListaFiltrada.map(item => {
+                const suma = sumaCumplimiento(item);
+                return {
+                    Area: item.area,
+                    DNI: item.dni || '',
+                    Nombres: item.nombres,
+                    ApellidoPaterno: item.apellido_paterno || '',
+                    ApellidoMaterno: item.apellido_materno || '',
+                    Cargo: item.cargo || '',
+                    C1: item.c1 ? 'SI' : 'NO',
+                    C2: item.c2 ? 'SI' : 'NO',
+                    C3: item.c3 ? 'SI' : 'NO',
+                    C4: item.c4 ? 'SI' : 'NO',
+                    C5: item.c5 ? 'SI' : 'NO',
+                    C6: item.c6 ? 'SI' : 'NO',
+                    C7: item.c7 ? 'SI' : 'NO',
+                    Progreso: `${suma}/7`,
+                    Estado: suma === 7 ? 'COMPLETO' : 'PENDIENTE',
+                };
+            });
+
+            const hoja = XLSX.utils.json_to_sheet(filas);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, 'Capacitaciones');
+            const fecha = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(libro, `capacitaciones_${fecha}.xlsx`);
+        }
+
+        function valorAfirmativo(valor) {
+            const v = String(valor || '').trim().toUpperCase();
+            return v === 'SI' || v === 'SÍ' || v === 'TRUE' || v === '1' || v === 'X';
+        }
+
+        let filasExcelValidadas = [];
+        let inputExcelActivo = null;
+
+        async function procesarArchivoExcel(input) {
+            const archivo = input.files[0];
+            if (!archivo) return;
+
+            const resultadoDiv = document.getElementById('resultadoCargaExcel');
+            resultadoDiv.textContent = 'Leyendo archivo…';
+            inputExcelActivo = input;
+
+            try {
+                const bufer = await archivo.arrayBuffer();
+                const libro = XLSX.read(bufer, { type: 'array' });
+                const hoja = libro.Sheets[libro.SheetNames[0]];
+                const filas = XLSX.utils.sheet_to_json(hoja, { defval: '' });
+
+                if (filas.length === 0) {
+                    mostrarAviso('El archivo no tiene filas de datos.', 'advertencia');
+                    resultadoDiv.textContent = '';
+                    input.value = '';
+                    return;
+                }
+
+                const columnasArchivo = Object.keys(filas[0]);
+                const faltantes = COLUMNAS_EXCEL.filter(c => !columnasArchivo.includes(c));
+                if (faltantes.length > 0) {
+                    mostrarAviso(`Faltan columnas en el archivo: ${faltantes.join(', ')}. Descarga la plantilla para ver el formato exacto.`, 'error', 8000);
+                    resultadoDiv.textContent = '';
+                    input.value = '';
+                    return;
+                }
+
+                // Solo LEE y VALIDA — todavía no guarda nada en la base de datos.
+                filasExcelValidadas = filas.map(fila => {
+                    const dni = String(fila.DNI || '').trim();
+                    const nombres = String(fila.Nombres || '').trim();
+                    const valido = !!(dni && nombres);
+                    const existente = valido ? registrosCache.find(r => r.dni === dni) : null;
+
+                    return {
+                        valido,
+                        accion: !valido ? 'error' : (existente ? 'actualiza' : 'nuevo'),
+                        idExistente: existente ? existente.id : null,
+                        registro: {
+                            area: String(fila.Area || '').trim(),
+                            dni,
+                            nombres,
+                            apellido_paterno: String(fila.ApellidoPaterno || '').trim(),
+                            apellido_materno: String(fila.ApellidoMaterno || '').trim(),
+                            cargo: String(fila.Cargo || '').trim(),
+                            c1: valorAfirmativo(fila.C1),
+                            c2: valorAfirmativo(fila.C2),
+                            c3: valorAfirmativo(fila.C3),
+                            c4: valorAfirmativo(fila.C4),
+                            c5: valorAfirmativo(fila.C5),
+                            c6: valorAfirmativo(fila.C6),
+                            c7: valorAfirmativo(fila.C7),
+                        }
+                    };
+                });
+
+                resultadoDiv.textContent = '';
+                mostrarModalValidacionExcel();
+            } catch (error) {
+                console.error('[capacitaciones] Error procesando Excel:', error);
+                mostrarAviso('No se pudo leer el archivo. Verifica que sea un Excel (.xlsx) válido con el formato de la plantilla.', 'error', 7000);
+                resultadoDiv.textContent = '';
+                input.value = '';
+            }
+        }
+
+        /* ---------- Vista previa / confirmación antes de guardar ---------- */
+        function mostrarModalValidacionExcel() {
+            const total = filasExcelValidadas.length;
+            const nuevos = filasExcelValidadas.filter(f => f.accion === 'nuevo').length;
+            const actualiza = filasExcelValidadas.filter(f => f.accion === 'actualiza').length;
+            const conError = filasExcelValidadas.filter(f => f.accion === 'error').length;
+
+            document.getElementById('resumenValidacionExcel').innerHTML = `
+                <strong>${total}</strong> fila(s) leídas —
+                <span class="chip-resumen chip-nuevo">${nuevos} nuevo(s)</span>
+                <span class="chip-resumen chip-actualiza">${actualiza} actualiza(n)</span>
+                ${conError > 0 ? `<span class="chip-resumen chip-error">${conError} con error (sin DNI o Nombres)</span>` : ''}
+            `;
+
+            const tbody = document.getElementById('tbodyValidacionExcel');
+            tbody.innerHTML = filasExcelValidadas.map((f, i) => {
+                const r = f.registro;
+                const capsResumen = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7']
+                    .map((c, idx) => `<span class="punto-cap ${r[c] ? 'punto-completo' : 'punto-pendiente'}" title="${NOMBRES_CAPACITACIONES[c]}">C${idx + 1}</span>`)
+                    .join('');
+
+                const etiquetaAccion = f.accion === 'nuevo' ? '<span class="chip-resumen chip-nuevo">Nuevo</span>'
+                    : f.accion === 'actualiza' ? '<span class="chip-resumen chip-actualiza">Actualiza</span>'
+                    : '<span class="chip-resumen chip-error">Error</span>';
+
+                return `
+                    <tr class="${f.valido ? '' : 'fila-invalida-excel'}">
+                        <td>${i + 1}</td>
+                        <td>${r.dni || '—'}</td>
+                        <td>${[r.nombres, r.apellido_paterno, r.apellido_materno].filter(Boolean).join(' ') || '—'}</td>
+                        <td>${r.area || '—'}</td>
+                        <td>${r.cargo || '—'}</td>
+                        <td class="celda-puntos-cap">${capsResumen}</td>
+                        <td>${etiquetaAccion}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('modalValidacionExcel').style.display = 'flex';
+        }
+
+        function cancelarCargaExcel() {
+            filasExcelValidadas = [];
+            if (inputExcelActivo) inputExcelActivo.value = '';
+            document.getElementById('modalValidacionExcel').style.display = 'none';
+        }
+
+        async function confirmarCargaExcel() {
+            if (!estaEnLinea()) { mostrarAviso('No hay conexión a internet. Espera a que vuelva la señal.', 'error'); return; }
+
+            const btn = document.getElementById('btnConfirmarCargaExcel');
+            btn.disabled = true;
+            const resultadoDiv = document.getElementById('resultadoCargaExcel');
+
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            let agregados = 0, actualizados = 0, errores = 0;
+            const validas = filasExcelValidadas.filter(f => f.valido);
+
+            for (let i = 0; i < validas.length; i++) {
+                const f = validas[i];
+                btn.textContent = `Guardando ${i + 1} de ${validas.length}…`;
+
+                let ok;
+                if (f.accion === 'actualiza') {
+                    ok = await actualizarPersonalCapacitaciones(f.idExistente, f.registro);
+                } else {
+                    f.registro.creado_por = user ? user.id : null;
+                    ok = await agregarPersonalCapacitaciones(f.registro);
+                }
+                if (ok) { f.accion === 'actualiza' ? actualizados++ : agregados++; } else { errores++; }
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Confirmar Carga';
+
+            const conErrorOriginal = filasExcelValidadas.filter(f => !f.valido).length;
+            resultadoDiv.textContent = `Listo: ${agregados} agregado(s), ${actualizados} actualizado(s)${(errores + conErrorOriginal) > 0 ? `, ${errores + conErrorOriginal} con error` : ''}.`;
+            mostrarAviso('Carga masiva completada.', 'exito');
+
+            document.getElementById('modalValidacionExcel').style.display = 'none';
+            filasExcelValidadas = [];
+            if (inputExcelActivo) inputExcelActivo.value = '';
             await cargarPersonal();
         }
 
