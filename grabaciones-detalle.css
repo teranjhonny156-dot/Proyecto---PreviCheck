@@ -170,3 +170,146 @@
 }
 
 .oculto { display: none; }
+
+/* El NVR solo aplica a QOLQAS — se oculta por completo en los CT */
+.sede-sin-nvr #colNvr,
+.sede-sin-nvr .celda-nvr,
+.sede-sin-nvr #grupoNvr {
+    display: none;
+}
+
+/* ----- Carga masiva por Excel (mismo patrón que capacitaciones.html) ----- */
+.instrucciones-excel {
+    font-size: 12.5px;
+    color: var(--text-color);
+    line-height: 1.7;
+    margin-bottom: 14px;
+    background: var(--surface-2, #f8fafc);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 12px 14px;
+}
+
+.instrucciones-excel code {
+    background: var(--chip-bg, #e2e8f0);
+    color: var(--home-azul, #1f8bc9);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.btn-plantilla-excel {
+    background: var(--badge-verde-bg);
+    color: var(--home-verde, #16a34a);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    font-weight: 700;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.btn-plantilla-excel:hover { filter: brightness(0.95); }
+
+.fila-carga-excel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.botones-carga-excel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+}
+
+.botones-carga-excel .btn-plantilla-excel,
+.botones-carga-excel .input-archivo-excel {
+    width: 100%;
+}
+
+.input-archivo-excel {
+    height: 34px;
+    box-sizing: border-box;
+    font-size: 12.5px;
+    color: var(--text-color);
+    background: var(--surface-2, #f8fafc);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 7px 10px;
+}
+
+.input-archivo-excel::file-selector-button {
+    background: var(--home-azul, #1f8bc9);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.input-archivo-excel::file-selector-button:hover { background: #15679a; }
+
+.resultado-carga-excel {
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: var(--home-verde, #5db74b);
+    font-weight: 600;
+}
+
+/* ----- Modal de validación previa (carga masiva de cámaras) ----- */
+.modal-content-ancho {
+    max-width: 920px;
+    width: 95%;
+}
+
+.resumen-validacion-excel {
+    font-size: 13px;
+    color: var(--title-color);
+    margin-bottom: 14px;
+}
+
+.chip-resumen {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 6px;
+}
+.chip-nuevo     { background: var(--badge-verde-bg); color: var(--badge-verde-text); }
+.chip-actualiza { background: var(--badge-azul-bg); color: var(--badge-azul-text); }
+.chip-error     { background: var(--badge-rojo-bg); color: var(--badge-rojo-text); }
+
+.tabla-validacion-excel-wrap {
+    max-height: 340px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.tabla-validacion-excel-wrap table {
+    min-width: 600px;
+    margin-top: 0;
+}
+
+.fila-invalida-excel {
+    background: var(--badge-rojo-bg);
+}
+
+.acciones-persona {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}

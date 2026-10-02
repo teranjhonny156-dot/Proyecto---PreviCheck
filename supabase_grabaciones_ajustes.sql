@@ -42,3 +42,29 @@ create policy "opciones_auditor_escritura" on public.opciones_auditor
 insert into public.opciones_auditor (valor) values
     ('Jhonny Teran'), ('José Hernandez'), ('Eduardo Solano')
 on conflict (valor) do nothing;
+
+-- ============================================================
+-- HISTORIAL DE AUDITORÍAS POR CÁMARA
+-- Cada vez que se guarda una cámara (nueva o editada), queda un
+-- registro aquí. Así se puede ver el último estado (en camaras_cctv)
+-- y todo el historial de auditorías anteriores de esa cámara.
+-- ============================================================
+create table public.camaras_cctv_historial (
+    id bigint generated always as identity primary key,
+    camara_id bigint references public.camaras_cctv(id) on delete cascade,
+    estado text,
+    dias_grabacion integer,
+    auditor text,
+    fecha_auditoria date,
+    observaciones text,
+    registrado_en timestamptz default now(),
+    registrado_por uuid references auth.users(id)
+);
+
+alter table public.camaras_cctv_historial enable row level security;
+
+create policy "camaras_cctv_historial_lectura" on public.camaras_cctv_historial
+    for select using (auth.role() = 'authenticated');
+
+create policy "camaras_cctv_historial_escritura" on public.camaras_cctv_historial
+    for all using (public.es_editor()) with check (public.es_editor());

@@ -260,9 +260,9 @@ async function listarCamarasCCTV() {
 }
 
 async function agregarCamara(registro) {
-    const { error } = await supabaseClient.from('camaras_cctv').insert(registro);
-    if (error) { manejarErrorSupabase(error, 'agregando cámara'); return false; }
-    return true;
+    const { data, error } = await supabaseClient.from('camaras_cctv').insert(registro).select().single();
+    if (error) { manejarErrorSupabase(error, 'agregando cámara'); return null; }
+    return data;
 }
 
 async function actualizarCamara(id, campos) {
@@ -288,4 +288,21 @@ async function guardarLinkImagenesSede(sede, link) {
     const { error } = await supabaseClient.from('grabaciones_imagenes').upsert({ sede, link, actualizado_en: new Date().toISOString() });
     if (error) { manejarErrorSupabase(error, 'guardando el link de imágenes'); return false; }
     return true;
+}
+
+/* ---------- 11. Historial de Auditorías por Cámara ---------- */
+async function registrarHistorialCamara(camaraId, datos) {
+    const { error } = await supabaseClient.from('camaras_cctv_historial').insert({ camara_id: camaraId, ...datos });
+    if (error) { manejarErrorSupabase(error, 'registrando historial de auditoría'); return false; }
+    return true;
+}
+
+async function listarHistorialCamara(camaraId) {
+    const { data, error } = await supabaseClient
+        .from('camaras_cctv_historial')
+        .select('*')
+        .eq('camara_id', camaraId)
+        .order('registrado_en', { ascending: false });
+    if (error) { manejarErrorSupabase(error, 'listando historial de auditoría'); return []; }
+    return data || [];
 }

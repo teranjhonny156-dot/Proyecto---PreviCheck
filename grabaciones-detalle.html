@@ -60,6 +60,23 @@
     </div>
 
     <div class="panel-formulario-caso" data-solo-editor="ocultar">
+        <h3 class="titulo-formulario">Carga Masiva desde Excel</h3>
+        <p class="instrucciones-excel">
+            Para auditar muchas cámaras de una sola vez. El archivo debe tener estas columnas en la primera fila:
+            <code>Numero</code>, <code>Camara</code>, <code>TipoCamara</code><span id="instruccionNvr">, <code>NVR</code></span>,
+            <code>Estado</code> (OPERATIVO / INOPERATIVO / vacío), <code>DiasGrabacion</code>, <code>Auditor</code>, <code>FechaAuditoria</code> (AAAA-MM-DD), <code>Observaciones</code>.
+            Se identifica cada fila por el código de <strong>Cámara</strong>: si ya existe en esta sede, se <strong>actualiza</strong>; si no, se <strong>agrega</strong>.
+        </p>
+        <div class="fila-carga-excel">
+            <div class="botones-carga-excel">
+                <button type="button" class="btn-sm btn-plantilla-excel" onclick="descargarPlantillaCamaras()">⬇️ Descargar plantilla Excel</button>
+                <input type="file" id="inputExcelCamaras" accept=".xlsx,.xls" class="input-archivo-excel" onchange="procesarArchivoExcelCamaras(this)">
+            </div>
+        </div>
+        <div id="resultadoCargaExcelCamaras" class="resultado-carga-excel"></div>
+    </div>
+
+    <div class="panel-formulario-caso" data-solo-editor="ocultar">
         <h3 class="titulo-formulario">Agregar / Auditar Cámara</h3>
         <form id="formCamara" onsubmit="guardarCamara(event); return false;">
             <input type="hidden" id="editId" value="">
@@ -81,7 +98,7 @@
                         <option value="SIN DESCRIPCION">Sin descripción</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="grupoNvr">
                     <label>NVR Asociado</label>
                     <select id="nvrAsociado" class="form-control">
                         <option value="">-- No aplica --</option>
@@ -144,7 +161,7 @@
                     <th>N°</th>
                     <th>Cámara</th>
                     <th>Tipo</th>
-                    <th>NVR</th>
+                    <th id="colNvr">NVR</th>
                     <th>Estado</th>
                     <th>Días Grab.</th>
                     <th>Auditor</th>
@@ -157,6 +174,67 @@
                 <tr><td colspan="10" class="empty-state">Cargando…</td></tr>
             </tbody>
         </table>
+    </div>
+
+    <!-- MODAL — Historial de auditorías de una cámara -->
+    <div id="modalHistorial" class="modal-overlay">
+        <div class="modal-content modal-content-ancho">
+            <div class="modal-header">
+                <h3>Historial de Auditorías — <span id="nombreCamaraHistorial"></span></h3>
+                <span class="close-modal" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalHistorial()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cerrarModalHistorial()}">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="table-scroll-container tabla-validacion-excel-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Registrado</th>
+                                <th>Estado</th>
+                                <th>Días Grab.</th>
+                                <th>Auditor</th>
+                                <th>Fecha Auditoría</th>
+                                <th>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyHistorial"></tbody>
+                    </table>
+                </div>
+                <p class="texto-ayuda-validacion">El registro más reciente aparece primero — es la auditoría vigente que se ve en la tabla principal.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL — Validación previa de la carga masiva por Excel -->
+    <div id="modalValidacionCamaras" class="modal-overlay">
+        <div class="modal-content modal-content-ancho">
+            <div class="modal-header">
+                <h3>Confirmar Carga de Cámaras</h3>
+                <span class="close-modal" role="button" tabindex="0" aria-label="Cerrar" onclick="cancelarCargaCamaras()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cancelarCargaCamaras()}">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p class="texto-ayuda-validacion">Revisa que las cámaras se hayan leído correctamente antes de guardar. Nada se guarda todavía.</p>
+                <div id="resumenValidacionCamaras" class="resumen-validacion-excel"></div>
+                <div class="table-scroll-container tabla-validacion-excel-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Cámara</th>
+                                <th>Tipo</th>
+                                <th>Estado</th>
+                                <th>Auditor</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyValidacionCamaras"></tbody>
+                    </table>
+                </div>
+                <div class="botonera-modal-validacion">
+                    <button type="button" class="btn-sm btn-edit" onclick="cancelarCargaCamaras()">Cancelar</button>
+                    <button type="button" id="btnConfirmarCargaCamaras" class="btn-action" onclick="confirmarCargaCamaras()">Confirmar Carga</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL — Gestionar auditores -->
@@ -313,14 +391,15 @@
                     <td>${c.numero ?? '—'}</td>
                     <td><strong>${c.camara}</strong></td>
                     <td>${c.tipo_camara || '—'}</td>
-                    <td>${c.nvr_asociado || '—'}</td>
+                    <td class="celda-nvr">${c.nvr_asociado || '—'}</td>
                     <td>${badgeEstado}</td>
                     <td>${c.dias_grabacion ?? '—'}</td>
                     <td>${c.auditor || '—'}</td>
                     <td>${c.fecha_auditoria || '—'}</td>
                     <td>${c.observaciones || '—'}</td>
-                    <td>
-                        ${soloLectura ? '<span class="texto-solo-lectura">—</span>' : `
+                    <td class="acciones-persona">
+                        <button class="btn-sm btn-edit" onclick="verHistorialCamara(${c.id}, '${c.camara.replace(/'/g, "\\'")}')" title="Ver historial de auditorías">📜</button>
+                        ${soloLectura ? '' : `
                             <button class="btn-sm btn-edit" onclick="editarCamara(${c.id})" aria-label="Editar cámara">✏️</button>
                             <button class="btn-sm btn-delete" onclick="eliminarCamaraRegistro(${c.id})" aria-label="Eliminar cámara">🗑️</button>
                         `}
@@ -355,17 +434,30 @@
             btn.disabled = true;
             btn.textContent = 'Guardando…';
 
-            let ok;
+            let ok, camaraId;
             if (editId) {
-                ok = await actualizarCamara(parseInt(editId), registro);
+                camaraId = parseInt(editId);
+                ok = await actualizarCamara(camaraId, registro);
             } else {
                 registro.creado_por = user ? user.id : null;
-                ok = await agregarCamara(registro);
+                const nueva = await agregarCamara(registro);
+                ok = !!nueva;
+                camaraId = nueva ? nueva.id : null;
             }
 
             btn.disabled = false;
             btn.textContent = textoOriginal;
             if (!ok) return;
+
+            // Deja constancia en el historial de esta cámara (para poder ver auditorías anteriores).
+            await registrarHistorialCamara(camaraId, {
+                estado: registro.estado,
+                dias_grabacion: registro.dias_grabacion,
+                auditor: registro.auditor,
+                fecha_auditoria: registro.fecha_auditoria,
+                observaciones: registro.observaciones,
+                registrado_por: user ? user.id : null,
+            });
 
             mostrarAviso(editId ? 'Cámara actualizada correctamente.' : 'Cámara agregada correctamente.', 'exito');
             resetearFormulario();
@@ -393,6 +485,40 @@
             window.scrollTo({ top: document.getElementById('formCamara').offsetTop - 80, behavior: 'smooth' });
         }
 
+        async function verHistorialCamara(id, nombreCamara) {
+            document.getElementById('nombreCamaraHistorial').textContent = nombreCamara;
+            const tbody = document.getElementById('tbodyHistorial');
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando…</td></tr>';
+            document.getElementById('modalHistorial').style.display = 'flex';
+
+            const historial = await listarHistorialCamara(id);
+            if (historial.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Aún no hay auditorías registradas para esta cámara.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = historial.map((h, i) => {
+                const badgeEstado = h.estado === 'operativo' ? '<span class="badge-estado-camara badge-operativo">Operativo</span>'
+                    : h.estado === 'inoperativo' ? '<span class="badge-estado-camara badge-inoperativo">Inoperativo</span>'
+                    : '<span class="badge-estado-camara badge-sin-auditar">Sin auditar</span>';
+                const fechaRegistro = new Date(h.registrado_en).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' });
+                return `
+                    <tr>
+                        <td>${fechaRegistro}${i === 0 ? ' <span class="chip-resumen chip-actualiza">Último</span>' : ''}</td>
+                        <td>${badgeEstado}</td>
+                        <td>${h.dias_grabacion ?? '—'}</td>
+                        <td>${h.auditor || '—'}</td>
+                        <td>${h.fecha_auditoria || '—'}</td>
+                        <td>${h.observaciones || '—'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function cerrarModalHistorial() {
+            document.getElementById('modalHistorial').style.display = 'none';
+        }
+
         function resetearFormulario() {
             document.getElementById('formCamara').reset();
             document.getElementById('editId').value = '';
@@ -412,17 +538,22 @@
         function exportarExcelCamaras() {
             if (ultimaListaFiltrada.length === 0) { mostrarAviso('No hay cámaras para exportar con los filtros actuales.', 'advertencia'); return; }
 
-            const filas = ultimaListaFiltrada.map(c => ({
-                'N°': c.numero ?? '',
-                Cámara: c.camara,
-                'Tipo de Cámara': c.tipo_camara || '',
-                'NVR Asociado': c.nvr_asociado || '',
-                Estado: c.estado === 'operativo' ? 'OPERATIVO' : c.estado === 'inoperativo' ? 'INOPERATIVO' : 'SIN AUDITAR',
-                'Días de Grabación': c.dias_grabacion ?? '',
-                Auditor: c.auditor || '',
-                'Fecha de Auditoría': c.fecha_auditoria || '',
-                Observaciones: c.observaciones || '',
-            }));
+            const filas = ultimaListaFiltrada.map(c => {
+                const fila = {
+                    'N°': c.numero ?? '',
+                    Cámara: c.camara,
+                    'Tipo de Cámara': c.tipo_camara || '',
+                };
+                if (SEDE === 'QOLQAS') fila['NVR Asociado'] = c.nvr_asociado || '';
+                Object.assign(fila, {
+                    Estado: c.estado === 'operativo' ? 'OPERATIVO' : c.estado === 'inoperativo' ? 'INOPERATIVO' : 'SIN AUDITAR',
+                    'Días de Grabación': c.dias_grabacion ?? '',
+                    Auditor: c.auditor || '',
+                    'Fecha de Auditoría': c.fecha_auditoria || '',
+                    Observaciones: c.observaciones || '',
+                });
+                return fila;
+            });
 
             const hoja = XLSX.utils.json_to_sheet(filas);
             const libro = XLSX.utils.book_new();
@@ -524,6 +655,201 @@
             cerrarModalImagenes();
         }
 
+        /* ============================================================
+           CARGA MASIVA DESDE EXCEL (cámaras de esta sede)
+           ============================================================ */
+
+        function columnasExcelCamaras() {
+            const base = ['Numero', 'Camara', 'TipoCamara'];
+            if (SEDE === 'QOLQAS') base.push('NVR');
+            base.push('Estado', 'DiasGrabacion', 'Auditor', 'FechaAuditoria', 'Observaciones');
+            return base;
+        }
+
+        function descargarPlantillaCamaras() {
+            const columnas = columnasExcelCamaras();
+            const ejemplo = { Numero: 1, Camara: 'CAM001', TipoCamara: 'FIJA', Estado: 'OPERATIVO', DiasGrabacion: 15, Auditor: 'Jhonny Teran', FechaAuditoria: '2026-10-01', Observaciones: '' };
+            if (SEDE === 'QOLQAS') ejemplo.NVR = 'NVR_01';
+
+            const filaEjemplo = columnas.map(c => ejemplo[c] ?? '');
+            const hoja = XLSX.utils.aoa_to_sheet([columnas, filaEjemplo]);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, SEDE || 'Camaras');
+            XLSX.writeFile(libro, `plantilla_camaras_${(SEDE || 'sede').toLowerCase()}.xlsx`);
+        }
+
+        function valorAfirmativoEstado(valor) {
+            const v = String(valor || '').trim().toUpperCase();
+            if (v === 'OPERATIVO') return 'operativo';
+            if (v === 'INOPERATIVO') return 'inoperativo';
+            return null; // vacío o cualquier otra cosa = sin auditar
+        }
+
+        let filasCamarasValidadas = [];
+        let inputCamarasActivo = null;
+
+        async function procesarArchivoExcelCamaras(input) {
+            const archivo = input.files[0];
+            if (!archivo) return;
+
+            const resultadoDiv = document.getElementById('resultadoCargaExcelCamaras');
+            resultadoDiv.textContent = 'Leyendo archivo…';
+            inputCamarasActivo = input;
+
+            try {
+                const bufer = await archivo.arrayBuffer();
+                const libro = XLSX.read(bufer, { type: 'array' });
+                const hoja = libro.Sheets[libro.SheetNames[0]];
+                const filas = XLSX.utils.sheet_to_json(hoja, { defval: '' });
+
+                if (filas.length === 0) {
+                    mostrarAviso('El archivo no tiene filas de datos.', 'advertencia');
+                    resultadoDiv.textContent = '';
+                    input.value = '';
+                    return;
+                }
+
+                const columnasRequeridas = columnasExcelCamaras();
+                const columnasArchivo = Object.keys(filas[0]);
+                const faltantes = columnasRequeridas.filter(c => !columnasArchivo.includes(c));
+                if (faltantes.length > 0) {
+                    mostrarAviso(`Faltan columnas en el archivo: ${faltantes.join(', ')}. Descarga la plantilla para ver el formato exacto.`, 'error', 8000);
+                    resultadoDiv.textContent = '';
+                    input.value = '';
+                    return;
+                }
+
+                filasCamarasValidadas = filas.map(fila => {
+                    const camara = String(fila.Camara || '').trim();
+                    const valido = !!camara;
+                    const existente = valido ? camarasCache.find(c => c.camara === camara) : null;
+
+                    return {
+                        valido,
+                        accion: !valido ? 'error' : (existente ? 'actualiza' : 'nuevo'),
+                        idExistente: existente ? existente.id : null,
+                        registro: {
+                            sede: SEDE,
+                            numero: fila.Numero ? parseInt(fila.Numero) : null,
+                            camara,
+                            tipo_camara: String(fila.TipoCamara || '').trim() || 'SIN DESCRIPCION',
+                            nvr_asociado: SEDE === 'QOLQAS' ? (String(fila.NVR || '').trim() || null) : null,
+                            estado: valorAfirmativoEstado(fila.Estado),
+                            dias_grabacion: fila.DiasGrabacion ? parseInt(fila.DiasGrabacion) : null,
+                            auditor: String(fila.Auditor || '').trim(),
+                            fecha_auditoria: fila.FechaAuditoria ? String(fila.FechaAuditoria).trim() : null,
+                            observaciones: String(fila.Observaciones || '').trim(),
+                        }
+                    };
+                });
+
+                resultadoDiv.textContent = '';
+                mostrarModalValidacionCamaras();
+            } catch (error) {
+                console.error('[grabaciones] Error procesando Excel:', error);
+                mostrarAviso('No se pudo leer el archivo. Verifica que sea un Excel (.xlsx) válido con el formato de la plantilla.', 'error', 7000);
+                resultadoDiv.textContent = '';
+                input.value = '';
+            }
+        }
+
+        function mostrarModalValidacionCamaras() {
+            const total = filasCamarasValidadas.length;
+            const nuevos = filasCamarasValidadas.filter(f => f.accion === 'nuevo').length;
+            const actualiza = filasCamarasValidadas.filter(f => f.accion === 'actualiza').length;
+            const conError = filasCamarasValidadas.filter(f => f.accion === 'error').length;
+
+            document.getElementById('resumenValidacionCamaras').innerHTML = `
+                <strong>${total}</strong> fila(s) leídas —
+                <span class="chip-resumen chip-nuevo">${nuevos} nueva(s)</span>
+                <span class="chip-resumen chip-actualiza">${actualiza} actualiza(n)</span>
+                ${conError > 0 ? `<span class="chip-resumen chip-error">${conError} con error (sin código de cámara)</span>` : ''}
+            `;
+
+            const tbody = document.getElementById('tbodyValidacionCamaras');
+            tbody.innerHTML = filasCamarasValidadas.map((f, i) => {
+                const r = f.registro;
+                const badgeEstado = r.estado === 'operativo' ? '<span class="badge-estado-camara badge-operativo">Operativo</span>'
+                    : r.estado === 'inoperativo' ? '<span class="badge-estado-camara badge-inoperativo">Inoperativo</span>'
+                    : '<span class="badge-estado-camara badge-sin-auditar">Sin auditar</span>';
+                const etiquetaAccion = f.accion === 'nuevo' ? '<span class="chip-resumen chip-nuevo">Nuevo</span>'
+                    : f.accion === 'actualiza' ? '<span class="chip-resumen chip-actualiza">Actualiza</span>'
+                    : '<span class="chip-resumen chip-error">Error</span>';
+
+                return `
+                    <tr class="${f.valido ? '' : 'fila-invalida-excel'}">
+                        <td>${i + 1}</td>
+                        <td>${r.camara || '—'}</td>
+                        <td>${r.tipo_camara || '—'}</td>
+                        <td>${badgeEstado}</td>
+                        <td>${r.auditor || '—'}</td>
+                        <td>${etiquetaAccion}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('modalValidacionCamaras').style.display = 'flex';
+        }
+
+        function cancelarCargaCamaras() {
+            filasCamarasValidadas = [];
+            if (inputCamarasActivo) inputCamarasActivo.value = '';
+            document.getElementById('modalValidacionCamaras').style.display = 'none';
+        }
+
+        async function confirmarCargaCamaras() {
+            if (!estaEnLinea()) { mostrarAviso('No hay conexión a internet. Espera a que vuelva la señal.', 'error'); return; }
+
+            const btn = document.getElementById('btnConfirmarCargaCamaras');
+            btn.disabled = true;
+            const resultadoDiv = document.getElementById('resultadoCargaExcelCamaras');
+
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            let agregados = 0, actualizados = 0, errores = 0;
+            const validas = filasCamarasValidadas.filter(f => f.valido);
+
+            for (let i = 0; i < validas.length; i++) {
+                const f = validas[i];
+                btn.textContent = `Guardando ${i + 1} de ${validas.length}…`;
+
+                let ok, camaraId;
+                if (f.accion === 'actualiza') {
+                    camaraId = f.idExistente;
+                    ok = await actualizarCamara(camaraId, f.registro);
+                } else {
+                    f.registro.creado_por = user ? user.id : null;
+                    const nueva = await agregarCamara(f.registro);
+                    ok = !!nueva;
+                    camaraId = nueva ? nueva.id : null;
+                }
+                if (ok) {
+                    f.accion === 'actualiza' ? actualizados++ : agregados++;
+                    await registrarHistorialCamara(camaraId, {
+                        estado: f.registro.estado,
+                        dias_grabacion: f.registro.dias_grabacion,
+                        auditor: f.registro.auditor,
+                        fecha_auditoria: f.registro.fecha_auditoria,
+                        observaciones: f.registro.observaciones,
+                        registrado_por: user ? user.id : null,
+                    });
+                } else {
+                    errores++;
+                }
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Confirmar Carga';
+
+            const conErrorOriginal = filasCamarasValidadas.filter(f => !f.valido).length;
+            resultadoDiv.textContent = `Listo: ${agregados} agregada(s), ${actualizados} actualizada(s)${(errores + conErrorOriginal) > 0 ? `, ${errores + conErrorOriginal} con error` : ''}.`;
+            mostrarAviso('Carga masiva completada.', 'exito');
+
+            document.getElementById('modalValidacionCamaras').style.display = 'none';
+            filasCamarasValidadas = [];
+            if (inputCamarasActivo) inputCamarasActivo.value = '';
+            await cargarCamaras();
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             const session = await exigirSesion();
             if (!session) return;
@@ -532,6 +858,10 @@
             document.getElementById('nombreSede').textContent = nombre;
             document.getElementById('tituloSede').textContent = nombre;
             document.title = `Auditoría — ${nombre} | PreviCheck`;
+            if (SEDE !== 'QOLQAS') {
+                document.body.classList.add('sede-sin-nvr');
+                document.getElementById('instruccionNvr').style.display = 'none';
+            }
 
             actualizarColoresChart();
             await cargarAuditores();
