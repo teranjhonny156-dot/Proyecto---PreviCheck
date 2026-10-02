@@ -253,3 +253,39 @@ async function eliminarPersonalCapacitaciones(id) {
     if (error) { manejarErrorSupabase(error, 'eliminando personal'); return false; }
     return true;
 }
+
+/* ---------- 9. Cámaras CCTV (Control de Grabaciones) ---------- */
+async function listarCamarasCCTV() {
+    return await listarTodasLasFilas('camaras_cctv', 'numero', true, 'listando cámaras');
+}
+
+async function agregarCamara(registro) {
+    const { error } = await supabaseClient.from('camaras_cctv').insert(registro);
+    if (error) { manejarErrorSupabase(error, 'agregando cámara'); return false; }
+    return true;
+}
+
+async function actualizarCamara(id, campos) {
+    const { error } = await supabaseClient.from('camaras_cctv').update(campos).eq('id', id);
+    if (error) { manejarErrorSupabase(error, 'actualizando cámara'); return false; }
+    return true;
+}
+
+async function eliminarCamara(id) {
+    const { error } = await supabaseClient.from('camaras_cctv').delete().eq('id', id);
+    if (error) { manejarErrorSupabase(error, 'eliminando cámara'); return false; }
+    return true;
+}
+
+/* ---------- 10. Link de Imágenes por Sede (Control de Grabaciones) ---------- */
+async function obtenerLinkImagenesSede(sede) {
+    const { data, error } = await supabaseClient.from('grabaciones_imagenes').select('link').eq('sede', sede).maybeSingle();
+    if (error) { manejarErrorSupabase(error, 'obteniendo el link de imágenes'); return null; }
+    return data ? data.link : null;
+}
+
+async function guardarLinkImagenesSede(sede, link) {
+    const { error } = await supabaseClient.from('grabaciones_imagenes').upsert({ sede, link, actualizado_en: new Date().toISOString() });
+    if (error) { manejarErrorSupabase(error, 'guardando el link de imágenes'); return false; }
+    return true;
+}

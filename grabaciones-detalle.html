@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoría de Cámaras | PreviCheck</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="grabaciones-detalle.css">
+    <link rel="icon" href="imagenes/logotipo.png" type="image">
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('previcheck-tema') || 'dark');</script>
+</head>
+<body>
+    <header>
+        <div class="logo-section">
+            <div class="logo-container"><img src="imagenes/logo.png" alt="PreviCheck" class="logo-img"></div>
+            <span class="sub-title">| Auditoría de Cámaras — <span id="nombreSede">...</span></span>
+        </div>
+        <div class="header-acciones">
+            <a href="index.html" class="btn-header btn-header-inicio">🏠 Inicio</a>
+            <a href="grabaciones.html" class="btn-header">⬅️ Sedes</a>
+        </div>
+    </header>
+
+    <h2 class="main-title">Auditoría de Cámaras — <span id="tituloSede">...</span></h2>
+
+    <div class="kpi-container-4">
+        <div class="kpi-card">
+            <div class="kpi-icono kpi-icono--neutro">🎥</div>
+            <div>
+                <span class="kpi-label">Total Cámaras</span>
+                <h4 id="kpiTotal" class="kpi-valor kpi-valor--neutro">0</h4>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icono kpi-icono--verde">✅</div>
+            <div>
+                <span class="kpi-label">Operativas</span>
+                <h4 id="kpiOperativas" class="kpi-valor kpi-valor--verde">0</h4>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icono kpi-icono--rojo">⚠️</div>
+            <div>
+                <span class="kpi-label">Inoperativas</span>
+                <h4 id="kpiInoperativas" class="kpi-valor kpi-valor--rojo">0</h4>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icono kpi-icono--azul">📋</div>
+            <div>
+                <span class="kpi-label">Sin Auditar</span>
+                <h4 id="kpiSinAuditar" class="kpi-valor kpi-valor--azul">0</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="grafica-card">
+        <h3 class="titulo-grafica">Estado de Cámaras</h3>
+        <div class="grafica-canvas-wrap"><canvas id="graficoEstado"></canvas></div>
+    </div>
+
+    <div class="panel-formulario-caso" data-solo-editor="ocultar">
+        <h3 class="titulo-formulario">Agregar / Auditar Cámara</h3>
+        <form id="formCamara" onsubmit="guardarCamara(event); return false;">
+            <input type="hidden" id="editId" value="">
+            <div class="grid-formulario">
+                <div class="form-group">
+                    <label>N°</label>
+                    <input type="number" id="numero" class="form-control" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Cámara</label>
+                    <input type="text" id="camara" class="form-control" placeholder="Ej: CAM001" required>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Cámara</label>
+                    <select id="tipoCamara" class="form-control">
+                        <option value="FIJA">Fija</option>
+                        <option value="DOMO PTZ">Domo PTZ</option>
+                        <option value="OJO DE PEZ - 360°">Ojo de pez - 360°</option>
+                        <option value="SIN DESCRIPCION">Sin descripción</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>NVR Asociado</label>
+                    <select id="nvrAsociado" class="form-control">
+                        <option value="">-- No aplica --</option>
+                        <option value="NVR_01">NVR_01</option>
+                        <option value="NVR_02">NVR_02</option>
+                        <option value="INDEPENDIENTE">Independiente</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select id="estado" class="form-control">
+                        <option value="">Sin auditar</option>
+                        <option value="operativo">Operativo</option>
+                        <option value="inoperativo">Inoperativo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Días de Grabación Disponibles</label>
+                    <input type="number" id="diasGrabacion" class="form-control" min="0" placeholder="Ej: 15">
+                </div>
+                <div class="form-group">
+                    <label>Auditor</label>
+                    <div class="destino-input-row">
+                        <select id="auditor" class="form-control"></select>
+                        <button type="button" class="btn-sm btn-edit btn-gestionar-destinos" onclick="abrirModalAuditores()" data-solo-editor="ocultar" title="Gestionar auditores">⚙️</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Fecha de Auditoría</label>
+                    <input type="date" id="fechaAuditoria" class="form-control">
+                </div>
+                <div class="form-group campo-ancho">
+                    <label>Observaciones</label>
+                    <input type="text" id="observaciones" class="form-control" placeholder="Opcional">
+                </div>
+            </div>
+            <button type="submit" id="btnSubmit" class="btn-action">Agregar Cámara</button>
+        </form>
+    </div>
+
+    <div class="barra-filtros-detalle">
+        <input type="text" id="filtroTexto" class="form-control input-filtro-texto" placeholder="Buscar por cámara, auditor u observaciones..." oninput="renderizarTabla()">
+        <select id="filtroCamara" class="form-control select-filtro" onchange="renderizarTabla()">
+            <option value="todas">Todas las cámaras</option>
+        </select>
+        <select id="filtroEstado" class="form-control select-filtro" onchange="renderizarTabla()">
+            <option value="todos">Todos los estados</option>
+            <option value="operativo">Operativo</option>
+            <option value="inoperativo">Inoperativo</option>
+            <option value="sin_auditar">Sin auditar</option>
+        </select>
+        <button type="button" class="btn-sm btn-edit" onclick="abrirModalImagenes()">🖼️ Imágenes de la Sede</button>
+        <button type="button" class="btn-sm btn-edit" onclick="exportarExcelCamaras()">⬇️ Exportar a Excel</button>
+    </div>
+
+    <div class="table-scroll-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>Cámara</th>
+                    <th>Tipo</th>
+                    <th>NVR</th>
+                    <th>Estado</th>
+                    <th>Días Grab.</th>
+                    <th>Auditor</th>
+                    <th>Fecha</th>
+                    <th>Observaciones</th>
+                    <th class="col-actions">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="tbodyCamaras">
+                <tr><td colspan="10" class="empty-state">Cargando…</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- MODAL — Gestionar auditores -->
+    <div id="modalAuditores" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Gestionar Auditores</h3>
+                <span class="close-modal" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalAuditores()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cerrarModalAuditores()}">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group-inline">
+                    <input type="text" id="inputNuevoAuditor" class="form-control" placeholder="Nuevo auditor (ej: Juan Pérez)" onkeydown="if(event.key==='Enter'){event.preventDefault(); agregarAuditorModal();}">
+                    <button type="button" class="btn btn-primary" onclick="agregarAuditorModal()">Agregar</button>
+                </div>
+                <ul class="lista-modal-docs" id="listaAuditoresModal"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL — Imágenes de la sede (un solo link de OneDrive para todas las cámaras) -->
+    <div id="modalImagenes" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Imágenes de la Sede</h3>
+                <span class="close-modal" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalImagenes()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cerrarModalImagenes()}">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p class="texto-ayuda-validacion">Un solo link de OneDrive con las fotos de todas las cámaras de esta sede (en vez de uno por cámara).</p>
+                <div class="form-group">
+                    <label>Link de OneDrive</label>
+                    <input type="text" id="inputLinkImagenesSede" class="form-control" placeholder="https://onedrive.live.com/...">
+                </div>
+                <div class="botonera-modal-validacion">
+                    <a id="btnAbrirImagenesSede" href="#" target="_blank" rel="noopener" class="btn-sm btn-edit oculto">🔗 Abrir Imágenes</a>
+                    <button type="button" class="btn-action" onclick="guardarImagenesSedeModal()" data-solo-editor="ocultar">Guardar Link</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="errores.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const SEDE = (params.get('sede') || '').toUpperCase().trim();
+
+        let camarasCache = [];
+        let ultimaListaFiltrada = [];
+        let grafico = null;
+
+        function actualizarColoresChart() {
+            const estilos = getComputedStyle(document.documentElement);
+            Chart.defaults.color = estilos.getPropertyValue('--text-muted').trim() || '#8aa0c2';
+            Chart.defaults.borderColor = estilos.getPropertyValue('--chart-grid').trim() || 'rgba(255, 255, 255, 0.08)';
+        }
+        window.addEventListener('previcheck:tema-cambiado', () => {
+            actualizarColoresChart();
+            renderizarGrafico();
+        });
+
+        function nombreLegible(sede) {
+            if (sede === 'QOLQAS') return 'QOLQAS';
+            return 'CT ' + sede.charAt(0) + sede.slice(1).toLowerCase();
+        }
+
+        async function cargarCamaras() {
+            if (!SEDE) {
+                document.getElementById('tbodyCamaras').innerHTML = '<tr><td colspan="10" class="empty-state">No se indicó una sede válida en la URL.</td></tr>';
+                return;
+            }
+            const todas = await listarCamarasCCTV();
+            camarasCache = todas.filter(c => c.sede === SEDE);
+            actualizarEstadisticas();
+            renderizarGrafico();
+            poblarSelectorCamaras();
+            renderizarTabla();
+        }
+
+        /** Llena el desplegable "Seleccionar cámara" con las cámaras que de verdad tiene esta sede. */
+        function poblarSelectorCamaras() {
+            const select = document.getElementById('filtroCamara');
+            const valorActual = select.value;
+            const opciones = camarasCache
+                .slice()
+                .sort((a, b) => (a.numero ?? 0) - (b.numero ?? 0))
+                .map(c => `<option value="${c.camara}">${c.camara}</option>`).join('');
+            select.innerHTML = '<option value="todas">Todas las cámaras</option>' + opciones;
+            if (camarasCache.some(c => c.camara === valorActual)) select.value = valorActual;
+        }
+
+        function actualizarEstadisticas() {
+            const total = camarasCache.length;
+            const operativas = camarasCache.filter(c => c.estado === 'operativo').length;
+            const inoperativas = camarasCache.filter(c => c.estado === 'inoperativo').length;
+            const sinAuditar = total - operativas - inoperativas;
+
+            document.getElementById('kpiTotal').textContent = total;
+            document.getElementById('kpiOperativas').textContent = operativas;
+            document.getElementById('kpiInoperativas').textContent = inoperativas;
+            document.getElementById('kpiSinAuditar').textContent = sinAuditar;
+        }
+
+        function renderizarGrafico() {
+            if (grafico) grafico.destroy();
+            const operativas = camarasCache.filter(c => c.estado === 'operativo').length;
+            const inoperativas = camarasCache.filter(c => c.estado === 'inoperativo').length;
+            const sinAuditar = camarasCache.length - operativas - inoperativas;
+
+            grafico = new Chart(document.getElementById('graficoEstado'), {
+                type: 'pie',
+                data: {
+                    labels: ['Operativo', 'Inoperativo', 'Sin auditar'],
+                    datasets: [{ data: [operativas, inoperativas, sinAuditar], backgroundColor: ['#16a34a', '#dc2626', '#94a3b8'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+        }
+
+        function renderizarTabla() {
+            const texto = document.getElementById('filtroTexto').value.toLowerCase().trim();
+            const filtroEstado = document.getElementById('filtroEstado').value;
+            const filtroCamara = document.getElementById('filtroCamara').value;
+
+            const lista = camarasCache.filter(c => {
+                const cumpleTexto = !texto || [c.camara, c.auditor, c.observaciones].join(' ').toLowerCase().includes(texto);
+                let cumpleEstado = true;
+                if (filtroEstado === 'operativo') cumpleEstado = c.estado === 'operativo';
+                else if (filtroEstado === 'inoperativo') cumpleEstado = c.estado === 'inoperativo';
+                else if (filtroEstado === 'sin_auditar') cumpleEstado = !c.estado;
+                const cumpleCamara = filtroCamara === 'todas' || c.camara === filtroCamara;
+                return cumpleTexto && cumpleEstado && cumpleCamara;
+            });
+
+            ultimaListaFiltrada = lista;
+
+            const tbody = document.getElementById('tbodyCamaras');
+            tbody.innerHTML = '';
+            if (lista.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No hay cámaras que coincidan con los filtros.</td></tr>`;
+                return;
+            }
+
+            const soloLectura = esLector();
+            lista.forEach(c => {
+                const badgeEstado = c.estado === 'operativo' ? '<span class="badge-estado-camara badge-operativo">Operativo</span>'
+                    : c.estado === 'inoperativo' ? '<span class="badge-estado-camara badge-inoperativo">Inoperativo</span>'
+                    : '<span class="badge-estado-camara badge-sin-auditar">Sin auditar</span>';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${c.numero ?? '—'}</td>
+                    <td><strong>${c.camara}</strong></td>
+                    <td>${c.tipo_camara || '—'}</td>
+                    <td>${c.nvr_asociado || '—'}</td>
+                    <td>${badgeEstado}</td>
+                    <td>${c.dias_grabacion ?? '—'}</td>
+                    <td>${c.auditor || '—'}</td>
+                    <td>${c.fecha_auditoria || '—'}</td>
+                    <td>${c.observaciones || '—'}</td>
+                    <td>
+                        ${soloLectura ? '<span class="texto-solo-lectura">—</span>' : `
+                            <button class="btn-sm btn-edit" onclick="editarCamara(${c.id})" aria-label="Editar cámara">✏️</button>
+                            <button class="btn-sm btn-delete" onclick="eliminarCamaraRegistro(${c.id})" aria-label="Eliminar cámara">🗑️</button>
+                        `}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function guardarCamara(e) {
+            if (!validarCamposRequeridos(['camara'])) return;
+            if (!estaEnLinea()) { mostrarAviso('No hay conexión a internet. Espera a que vuelva la señal.', 'error'); return; }
+
+            const editId = document.getElementById('editId').value;
+            const { data: { user } } = await supabaseClient.auth.getUser();
+
+            const registro = {
+                sede: SEDE,
+                numero: document.getElementById('numero').value ? parseInt(document.getElementById('numero').value) : null,
+                camara: document.getElementById('camara').value.trim(),
+                tipo_camara: document.getElementById('tipoCamara').value,
+                nvr_asociado: document.getElementById('nvrAsociado').value || null,
+                estado: document.getElementById('estado').value || null,
+                dias_grabacion: document.getElementById('diasGrabacion').value ? parseInt(document.getElementById('diasGrabacion').value) : null,
+                auditor: document.getElementById('auditor').value || '',
+                fecha_auditoria: document.getElementById('fechaAuditoria').value || null,
+                observaciones: document.getElementById('observaciones').value.trim(),
+            };
+
+            const btn = document.getElementById('btnSubmit');
+            const textoOriginal = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Guardando…';
+
+            let ok;
+            if (editId) {
+                ok = await actualizarCamara(parseInt(editId), registro);
+            } else {
+                registro.creado_por = user ? user.id : null;
+                ok = await agregarCamara(registro);
+            }
+
+            btn.disabled = false;
+            btn.textContent = textoOriginal;
+            if (!ok) return;
+
+            mostrarAviso(editId ? 'Cámara actualizada correctamente.' : 'Cámara agregada correctamente.', 'exito');
+            resetearFormulario();
+            await cargarCamaras();
+        }
+
+        function editarCamara(id) {
+            const c = camarasCache.find(x => x.id === id);
+            if (!c) { mostrarAviso('Ese registro ya no existe. Actualizando…', 'advertencia'); cargarCamaras(); return; }
+
+            document.getElementById('editId').value = c.id;
+            document.getElementById('numero').value = c.numero ?? '';
+            document.getElementById('camara').value = c.camara || '';
+            document.getElementById('tipoCamara').value = c.tipo_camara || 'FIJA';
+            document.getElementById('nvrAsociado').value = c.nvr_asociado || '';
+            document.getElementById('estado').value = c.estado || '';
+            document.getElementById('diasGrabacion').value = c.dias_grabacion ?? '';
+            document.getElementById('auditor').value = c.auditor || '';
+            document.getElementById('fechaAuditoria').value = c.fecha_auditoria || '';
+            document.getElementById('observaciones').value = c.observaciones || '';
+
+            const btn = document.getElementById('btnSubmit');
+            btn.textContent = 'Actualizar Cámara';
+            btn.classList.add('btn-mode-update');
+            window.scrollTo({ top: document.getElementById('formCamara').offsetTop - 80, behavior: 'smooth' });
+        }
+
+        function resetearFormulario() {
+            document.getElementById('formCamara').reset();
+            document.getElementById('editId').value = '';
+            const btn = document.getElementById('btnSubmit');
+            btn.textContent = 'Agregar Cámara';
+            btn.classList.remove('btn-mode-update');
+        }
+
+        async function eliminarCamaraRegistro(id) {
+            if (!confirm('¿Eliminar esta cámara del registro de auditoría?')) return;
+            const ok = await eliminarCamara(id);
+            if (!ok) return;
+            mostrarAviso('Cámara eliminada.', 'exito');
+            await cargarCamaras();
+        }
+
+        function exportarExcelCamaras() {
+            if (ultimaListaFiltrada.length === 0) { mostrarAviso('No hay cámaras para exportar con los filtros actuales.', 'advertencia'); return; }
+
+            const filas = ultimaListaFiltrada.map(c => ({
+                'N°': c.numero ?? '',
+                Cámara: c.camara,
+                'Tipo de Cámara': c.tipo_camara || '',
+                'NVR Asociado': c.nvr_asociado || '',
+                Estado: c.estado === 'operativo' ? 'OPERATIVO' : c.estado === 'inoperativo' ? 'INOPERATIVO' : 'SIN AUDITAR',
+                'Días de Grabación': c.dias_grabacion ?? '',
+                Auditor: c.auditor || '',
+                'Fecha de Auditoría': c.fecha_auditoria || '',
+                Observaciones: c.observaciones || '',
+            }));
+
+            const hoja = XLSX.utils.json_to_sheet(filas);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, SEDE || 'Camaras');
+            const fecha = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(libro, `camaras_${(SEDE || 'sede').toLowerCase()}_${fecha}.xlsx`);
+        }
+
+        /* ---------- Auditores: lista editable ---------- */
+        let auditoresCache = [];
+
+        async function cargarAuditores() {
+            auditoresCache = await listarOpciones('opciones_auditor');
+            poblarSelectAuditores();
+        }
+
+        function poblarSelectAuditores() {
+            const select = document.getElementById('auditor');
+            const valorActual = select.value;
+            select.innerHTML = '<option value="">-- Seleccionar --</option>' +
+                auditoresCache.map(a => `<option value="${a.valor}">${a.valor}</option>`).join('');
+            if (auditoresCache.some(a => a.valor === valorActual)) select.value = valorActual;
+        }
+
+        function abrirModalAuditores() {
+            renderizarListaAuditoresModal();
+            document.getElementById('modalAuditores').style.display = 'flex';
+        }
+
+        function cerrarModalAuditores() {
+            document.getElementById('modalAuditores').style.display = 'none';
+        }
+
+        function renderizarListaAuditoresModal() {
+            const ul = document.getElementById('listaAuditoresModal');
+            if (auditoresCache.length === 0) {
+                ul.innerHTML = '<li class="empty-state">Aún no hay auditores registrados.</li>';
+                return;
+            }
+            ul.innerHTML = auditoresCache.map(a => `
+                <li>
+                    <span>${a.valor}</span>
+                    <button type="button" class="btn-sm btn-delete" onclick="eliminarAuditorModal(${a.id})" aria-label="Eliminar ${a.valor}">🗑️</button>
+                </li>
+            `).join('');
+        }
+
+        async function agregarAuditorModal() {
+            const input = document.getElementById('inputNuevoAuditor');
+            const valor = input.value.trim();
+            if (!valor) { mostrarAviso('Escribe un nombre.', 'advertencia'); return; }
+
+            if (await agregarOpcion('opciones_auditor', valor)) {
+                input.value = '';
+                mostrarAviso('Auditor agregado.', 'exito');
+                await cargarAuditores();
+                renderizarListaAuditoresModal();
+            }
+        }
+
+        async function eliminarAuditorModal(id) {
+            if (!confirm('¿Eliminar este auditor de la lista? Las auditorías ya guardadas con ese auditor no se modifican.')) return;
+            if (await eliminarOpcion('opciones_auditor', id)) {
+                mostrarAviso('Auditor eliminado.', 'exito');
+                await cargarAuditores();
+                renderizarListaAuditoresModal();
+            }
+        }
+
+        /* ---------- Imágenes de la sede (un link para todas las cámaras) ---------- */
+        async function abrirModalImagenes() {
+            const link = await obtenerLinkImagenesSede(SEDE);
+            document.getElementById('inputLinkImagenesSede').value = link || '';
+            const btnAbrir = document.getElementById('btnAbrirImagenesSede');
+            if (link) {
+                btnAbrir.href = link;
+                btnAbrir.classList.remove('oculto');
+            } else {
+                btnAbrir.classList.add('oculto');
+            }
+            document.getElementById('modalImagenes').style.display = 'flex';
+        }
+
+        function cerrarModalImagenes() {
+            document.getElementById('modalImagenes').style.display = 'none';
+        }
+
+        async function guardarImagenesSedeModal() {
+            const link = document.getElementById('inputLinkImagenesSede').value.trim();
+            if (!esUrlValida(link)) {
+                mostrarAviso('Ese link no parece una URL válida (debe empezar con https://).', 'advertencia');
+                return;
+            }
+            if (!estaEnLinea()) { mostrarAviso('No hay conexión a internet. Espera a que vuelva la señal.', 'error'); return; }
+
+            const ok = await guardarLinkImagenesSede(SEDE, link);
+            if (!ok) return;
+            mostrarAviso('Link de imágenes guardado.', 'exito');
+            cerrarModalImagenes();
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const session = await exigirSesion();
+            if (!session) return;
+
+            const nombre = nombreLegible(SEDE);
+            document.getElementById('nombreSede').textContent = nombre;
+            document.getElementById('tituloSede').textContent = nombre;
+            document.title = `Auditoría — ${nombre} | PreviCheck`;
+
+            actualizarColoresChart();
+            await cargarAuditores();
+            await cargarCamaras();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+/* ==========================================================
+   ESTILOS — grabaciones.html (organigrama QOLQAS + 7 CT)
+   ========================================================== */
+
+.header-acciones {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-header-inicio {
+    background-color: #475569;
+}
+
+.subtitulo-grabaciones {
+    color: var(--text-muted, #8aa0c2);
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+/* ----- Organigrama (mismo patrón que el menú principal) ----- */
+.organigrama-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.nodo-raiz {
+    background: var(--card-bg);
+    border: 2px solid var(--primary-color);
+    border-radius: 12px;
+    padding: 20px 38px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 24px rgba(226, 31, 122, 0.18), var(--shadow-md);
+    text-align: center;
+}
+
+.nodo-raiz-clicable {
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.nodo-raiz-clicable:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(226, 31, 122, 0.28), var(--shadow-md);
+}
+
+.nodo-raiz h2 {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    color: var(--title-color);
+}
+
+.nodo-icono-raiz {
+    width: 60px;
+    height: 60px;
+    font-size: 30px;
+    border: 2px solid var(--primary-color);
+}
+
+.conector-vertical-raiz {
+    width: 2px;
+    height: 30px;
+    background: var(--border-color);
+}
+
+/* Una sola fila siempre (QOLQAS tiene 7 hijos) — nodos compactos
+   para que quepan sin romper línea y sin desconectar los conectores */
+.nodos-hijos {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 14px;
+    position: relative;
+    padding-top: 30px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 6px;
+}
+
+.nodos-hijos::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 7%;
+    right: 7%;
+    height: 2px;
+    background: var(--border-color);
+}
+
+.nodo-hijo {
+    position: relative;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 18px 10px;
+    width: 128px;
+    flex-shrink: 0;
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+}
+
+.nodo-hijo::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    width: 2px;
+    height: 30px;
+    background: var(--border-color);
+}
+
+.nodo-hijo:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+    border-color: var(--home-azul);
+}
+
+.nodo-icono {
+    font-size: 24px;
+    background: var(--chip-bg);
+    border: 2px solid var(--home-azul);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nodo-hijo h3 { font-size: 12.5px; font-weight: 700; color: var(--title-color); }
+
+.contador-camaras {
+    font-size: 11px;
+    color: var(--home-azul, #1f8bc9);
+    font-weight: 700;
+}
+
+@media (max-width: 900px) {
+    .nodos-hijos::before { display: none; }
+    .nodo-hijo::before { display: none; }
+    .nodos-hijos { padding-top: 6px; flex-wrap: wrap; overflow-x: visible; }
+}
