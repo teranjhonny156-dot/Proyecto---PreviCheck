@@ -95,6 +95,63 @@ function esUrlValida(texto) {
     }
 }
 
+/* ---------- 1d. Fecha y hora de Perú (America/Lima, UTC-5 todo el año) ---------- */
+/**
+ * Todo el proyecto usa la hora de Perú para "hoy" (en vez de la hora UTC
+ * o la del dispositivo), y el formato DD/MM/AAAA para mostrar fechas.
+ * Antes, cosas como `input.valueAsDate = new Date()` o `new
+ * Date().toISOString()` tomaban la fecha en UTC, así que el día se
+ * adelantaba solo ~5 horas antes de medianoche real en Perú. Estas
+ * funciones evitan ese problema calculando siempre en America/Lima,
+ * sin importar la zona horaria configurada en el navegador del usuario.
+ */
+const ZONA_HORARIA_PE = 'America/Lima';
+
+/** Fecha de HOY en Perú como 'AAAA-MM-DD' (para inputs type="date", comparaciones y nombres de archivo). */
+function fechaHoyPeru() {
+    const partes = new Intl.DateTimeFormat('en-CA', {
+        timeZone: ZONA_HORARIA_PE, year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date());
+    const obj = {};
+    partes.forEach(p => { obj[p.type] = p.value; });
+    return `${obj.year}-${obj.month}-${obj.day}`;
+}
+
+/** Fecha y hora actuales de Perú como texto legible 'DD/MM/AAAA HH:mm' (ej. para encabezados o registros). */
+function fechaHoraActualPeru() {
+    return new Date().toLocaleString('es-PE', {
+        timeZone: ZONA_HORARIA_PE, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+}
+
+/**
+ * Convierte una fecha simple ('AAAA-MM-DD', tal como la guarda un
+ * input type="date" o una columna `date` de Supabase) a 'DD/MM/AAAA'
+ * para mostrarla. No necesita zona horaria: es solo una fecha de
+ * calendario, sin hora. Si recibe algo que no reconoce, lo devuelve
+ * tal cual en vez de romper la pantalla.
+ */
+function formatearFecha(fecha) {
+    if (!fecha) return '';
+    const texto = String(fecha).slice(0, 10);
+    const match = texto.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return texto;
+    const [, anio, mes, dia] = match;
+    return `${dia}/${mes}/${anio}`;
+}
+
+/**
+ * Convierte una marca de tiempo ISO con hora (ej. `registrado_en`,
+ * `creado_en`, `actualizado_en`) a 'DD/MM/AAAA HH:mm' en hora de Perú,
+ * sin importar la zona horaria del navegador que la esté mostrando.
+ */
+function formatearFechaHora(fechaIso) {
+    if (!fechaIso) return '';
+    return new Date(fechaIso).toLocaleString('es-PE', {
+        timeZone: ZONA_HORARIA_PE, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+}
+
 /* ---------- 2. Acceso seguro a localStorage ---------- */
 
 /**

@@ -393,7 +393,7 @@
         function resetearFormularioCaso() {
             document.getElementById('formCaso').reset();
             document.getElementById('editId').value = '';
-            document.getElementById('fechaSolicitud').valueAsDate = new Date();
+            document.getElementById('fechaSolicitud').value = fechaHoyPeru();
             actualizarDetalleOptions();
             const btn = document.getElementById('btnSubmitCaso');
             btn.textContent = 'Registrar Caso';
@@ -418,8 +418,8 @@
                     <li><span>Precio</span><strong>S/ ${Number(c.precio_mercaderia).toFixed(2)}</strong></li>
                     <li><span>Solicitante</span><strong>${c.solicitante} ${etiquetaCT}</strong></li>
                     <li><span>Operador</span><strong>${c.operador}</strong></li>
-                    <li><span>Fecha de Solicitud</span><strong>${c.fecha_solicitud || '—'}</strong></li>
-                    <li><span>Fecha de Respuesta</span><strong>${c.fecha_respuesta || '—'}</strong></li>
+                    <li><span>Fecha de Solicitud</span><strong>${formatearFecha(c.fecha_solicitud) || '—'}</strong></li>
+                    <li><span>Fecha de Respuesta</span><strong>${formatearFecha(c.fecha_respuesta) || '—'}</strong></li>
                     <li><span>Resolución</span><strong>${c.resolucion}</strong></li>
                     <li><span>Detalle</span><strong>${c.detalle_resolucion || '—'}</strong></li>
                     <li><span>Incidente de Seguridad</span><strong>${c.incidente_seguridad}</strong></li>
@@ -580,8 +580,8 @@
                     <td>${c.folio}</td>
                     <td>${c.descripcion_mercaderia}</td>
                     <td>S/ ${Number(c.precio_mercaderia).toFixed(2)}</td>
-                    <td>${c.fecha_solicitud || ''}</td>
-                    <td>${c.fecha_respuesta || '—'}</td>
+                    <td>${formatearFecha(c.fecha_solicitud)}</td>
+                    <td>${formatearFecha(c.fecha_respuesta) || '—'}</td>
                     <td>${c.resolucion}</td>
                     <td>${c.detalle_resolucion || '—'}</td>
                     <td>${c.incidente_seguridad}</td>
@@ -624,8 +624,8 @@
                 Folio: c.folio,
                 'Descripción Mercadería': c.descripcion_mercaderia,
                 'Precio Mercadería': c.precio_mercaderia,
-                'Fecha Solicitud': c.fecha_solicitud || '',
-                'Fecha Respuesta': c.fecha_respuesta || '',
+                'Fecha Solicitud': formatearFecha(c.fecha_solicitud),
+                'Fecha Respuesta': formatearFecha(c.fecha_respuesta),
                 Resolución: c.resolucion,
                 'Detalle Resolución': c.detalle_resolucion || '',
                 'Incidente Seguridad': c.incidente_seguridad,
@@ -637,7 +637,7 @@
             const hoja = XLSX.utils.json_to_sheet(filas);
             const libro = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(libro, hoja, 'CCTV');
-            const fecha = new Date().toISOString().slice(0, 10);
+            const fecha = fechaHoyPeru();
             XLSX.writeFile(libro, `cctv_${fecha}.xlsx`);
         }
 
@@ -670,7 +670,7 @@
             if (!session) return;
             poblarSelectsEstaticos();
             actualizarDetalleOptions();
-            document.getElementById('fechaSolicitud').valueAsDate = new Date();
+            document.getElementById('fechaSolicitud').value = fechaHoyPeru();
             await cargarYRenderizarTodo();
         });
     </script>

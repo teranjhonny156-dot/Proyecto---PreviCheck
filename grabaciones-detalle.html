@@ -23,49 +23,94 @@
 
     <h2 class="main-title">Auditoría de Cámaras — <span id="tituloSede">...</span></h2>
 
-    <div class="kpi-container-4">
-        <div class="kpi-card">
-            <div class="kpi-icono kpi-icono--neutro">🎥</div>
-            <div>
-                <span class="kpi-label">Total Cámaras</span>
-                <h4 id="kpiTotal" class="kpi-valor kpi-valor--neutro">0</h4>
+    <div class="tabs-cctv">
+        <button type="button" id="tabRango" class="tab-boton tab-activo" onclick="mostrarVistaGrabaciones('rango')">📅 Rango de Grabación</button>
+        <button type="button" id="tabAuditar" class="tab-boton" onclick="mostrarVistaGrabaciones('auditar')">📋 Auditar Cámaras</button>
+        <button type="button" class="btn-sm btn-edit btn-observaciones-sede" onclick="abrirModalObservacionesSede()">📝 Observaciones de la Sede</button>
+    </div>
+
+    <!-- ===================== VISTA: RANGO DE GRABACIÓN ===================== -->
+    <div id="vistaRango" class="vista-cctv">
+
+        <div class="kpi-container-4">
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--neutro">🎥</div>
+                <div>
+                    <span class="kpi-label">Total Cámaras</span>
+                    <h4 id="kpiTotal" class="kpi-valor kpi-valor--neutro">0</h4>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--verde">✅</div>
+                <div>
+                    <span class="kpi-label">Operativas</span>
+                    <h4 id="kpiOperativas" class="kpi-valor kpi-valor--verde">0</h4>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--rojo">⚠️</div>
+                <div>
+                    <span class="kpi-label">Inoperativas</span>
+                    <h4 id="kpiInoperativas" class="kpi-valor kpi-valor--rojo">0</h4>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--azul">📋</div>
+                <div>
+                    <span class="kpi-label">Sin Auditar</span>
+                    <h4 id="kpiSinAuditar" class="kpi-valor kpi-valor--azul">0</h4>
+                </div>
             </div>
         </div>
-        <div class="kpi-card">
-            <div class="kpi-icono kpi-icono--verde">✅</div>
-            <div>
-                <span class="kpi-label">Operativas</span>
-                <h4 id="kpiOperativas" class="kpi-valor kpi-valor--verde">0</h4>
-            </div>
+
+        <div class="grafica-card">
+            <h3 class="titulo-grafica">Estado de Cámaras</h3>
+            <div class="grafica-canvas-wrap"><canvas id="graficoEstado"></canvas></div>
         </div>
-        <div class="kpi-card">
-            <div class="kpi-icono kpi-icono--rojo">⚠️</div>
-            <div>
-                <span class="kpi-label">Inoperativas</span>
-                <h4 id="kpiInoperativas" class="kpi-valor kpi-valor--rojo">0</h4>
-            </div>
+
+        <div class="barra-filtros-detalle">
+            <input type="text" id="filtroTextoRango" class="form-control input-filtro-texto" placeholder="Buscar por cámara..." oninput="renderizarTablaRango()">
+            <select id="filtroEstadoRango" class="form-control select-filtro" onchange="renderizarTablaRango()">
+                <option value="todos">Todos los estados</option>
+                <option value="operativo">Operativo</option>
+                <option value="inoperativo">Inoperativo</option>
+                <option value="sin_auditar">Sin auditar</option>
+            </select>
         </div>
-        <div class="kpi-card">
-            <div class="kpi-icono kpi-icono--azul">📋</div>
-            <div>
-                <span class="kpi-label">Sin Auditar</span>
-                <h4 id="kpiSinAuditar" class="kpi-valor kpi-valor--azul">0</h4>
-            </div>
+
+        <p class="texto-ayuda-validacion">El rango de grabación (desde–hasta) se calcula solo cada día a partir de los días de grabación que confirme el auditor — igual que un NVR, que siempre conserva los últimos N días y va descartando los más antiguos. Ambas fechas se deslizan hacia adelante pasando las 00:00 (hora Perú); solo los "Días" cambian si se registra una nueva auditoría.</p>
+
+        <div class="table-scroll-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Cámara</th>
+                        <th>Tipo</th>
+                        <th>Grabación desde</th>
+                        <th>Grabación hasta</th>
+                        <th>Días</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyRango">
+                    <tr><td colspan="7" class="empty-state">Cargando…</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <div class="grafica-card">
-        <h3 class="titulo-grafica">Estado de Cámaras</h3>
-        <div class="grafica-canvas-wrap"><canvas id="graficoEstado"></canvas></div>
-    </div>
+    <!-- ===================== VISTA: AUDITAR CÁMARAS ===================== -->
+    <div id="vistaAuditar" class="vista-cctv vista-oculta">
 
     <div class="panel-formulario-caso" data-solo-editor="ocultar">
         <h3 class="titulo-formulario">Carga Masiva desde Excel</h3>
         <p class="instrucciones-excel">
             Para auditar muchas cámaras de una sola vez. El archivo debe tener estas columnas en la primera fila:
             <code>Numero</code>, <code>Camara</code>, <code>TipoCamara</code><span id="instruccionNvr">, <code>NVR</code></span>,
-            <code>Estado</code> (OPERATIVO / INOPERATIVO / vacío), <code>DiasGrabacion</code>, <code>Auditor</code>, <code>FechaAuditoria</code> (AAAA-MM-DD), <code>Observaciones</code>.
+            <code>Estado</code> (OPERATIVO / INOPERATIVO / vacío), <code>DiasGrabacion</code> (días de grabación disponibles en el NVR), <code>Auditor</code>, <code>FechaAuditoria</code> (AAAA-MM-DD), <code>Observaciones</code>.
             Se identifica cada fila por el código de <strong>Cámara</strong>: si ya existe en esta sede, se <strong>actualiza</strong>; si no, se <strong>agrega</strong>.
+            El rango "Grabación desde–hasta" se calcula solo a partir de <code>DiasGrabacion</code>, no hay que cargarlo aparte.
         </p>
         <div class="fila-carga-excel">
             <div class="botones-carga-excel">
@@ -117,7 +162,8 @@
                 </div>
                 <div class="form-group">
                     <label>Días de Grabación Disponibles</label>
-                    <input type="number" id="diasGrabacion" class="form-control" min="0" placeholder="Ej: 15">
+                    <input type="number" id="diasGrabacionDisponibles" class="form-control" min="0" placeholder="Ej: 30" oninput="actualizarVistaPreviaRango()">
+                    <span class="texto-solo-lectura" id="infoGrabacionDesde"></span>
                 </div>
                 <div class="form-group">
                     <label>Auditor</label>
@@ -135,6 +181,7 @@
                     <input type="text" id="observaciones" class="form-control" placeholder="Opcional">
                 </div>
             </div>
+            <p class="texto-ayuda-validacion">El NVR guarda siempre los últimos N días de grabación (y descarta los más antiguos); aquí confirmas cuántos días tiene disponibles ahora mismo. "Grabación desde" y "Grabación hasta" se calculan solos a partir de ese número y se deslizan hacia adelante cada día — no son fechas fijas.</p>
             <button type="submit" id="btnSubmit" class="btn-action">Agregar Cámara</button>
         </form>
     </div>
@@ -163,6 +210,8 @@
                     <th>Tipo</th>
                     <th id="colNvr">NVR</th>
                     <th>Estado</th>
+                    <th>Grabación desde</th>
+                    <th>Grabación hasta</th>
                     <th>Días Grab.</th>
                     <th>Auditor</th>
                     <th>Fecha</th>
@@ -171,10 +220,12 @@
                 </tr>
             </thead>
             <tbody id="tbodyCamaras">
-                <tr><td colspan="10" class="empty-state">Cargando…</td></tr>
+                <tr><td colspan="12" class="empty-state">Cargando…</td></tr>
             </tbody>
         </table>
     </div>
+
+    </div><!-- /vistaAuditar -->
 
     <!-- MODAL — Historial de auditorías de una cámara -->
     <div id="modalHistorial" class="modal-overlay">
@@ -190,7 +241,7 @@
                             <tr>
                                 <th>Registrado</th>
                                 <th>Estado</th>
-                                <th>Días Grab.</th>
+                                <th>Días de Grabación</th>
                                 <th>Auditor</th>
                                 <th>Fecha Auditoría</th>
                                 <th>Observaciones</th>
@@ -200,6 +251,26 @@
                     </table>
                 </div>
                 <p class="texto-ayuda-validacion">El registro más reciente aparece primero — es la auditoría vigente que se ve en la tabla principal.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL — Observaciones generales de la sede -->
+    <div id="modalObservacionesSede" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Observaciones de la Sede</h3>
+                <span class="close-modal" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarModalObservacionesSede()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cerrarModalObservacionesSede()}">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p class="texto-ayuda-validacion">Observaciones generales de esta sede (distintas de las observaciones por cámara). Un solo texto compartido por todos.</p>
+                <div class="form-group">
+                    <label>Observaciones</label>
+                    <textarea id="inputObservacionesSede" class="form-control" rows="5" placeholder="Ej: pendiente renovar licencia del NVR, acceso restringido al cuarto de cámaras, etc."></textarea>
+                </div>
+                <div class="botonera-modal-validacion">
+                    <button type="button" class="btn-action" onclick="guardarObservacionesSedeModal()" data-solo-editor="ocultar">Guardar Observaciones</button>
+                </div>
             </div>
         </div>
     </div>
@@ -222,6 +293,7 @@
                                 <th>Cámara</th>
                                 <th>Tipo</th>
                                 <th>Estado</th>
+                                <th>Días</th>
                                 <th>Auditor</th>
                                 <th>Acción</th>
                             </tr>
@@ -288,6 +360,42 @@
         let ultimaListaFiltrada = [];
         let grafico = null;
 
+        /**
+         * Rango de grabación tipo "ventana deslizante", igual que un NVR: siempre
+         * conserva los últimos N días y va descartando los más antiguos. Solo se
+         * guarda el número de días auditado (dias_grabacion_disponibles); el rango
+         * "desde–hasta" se calcula aquí cada vez, con "hasta" = hoy (hora Perú) y
+         * "desde" = hoy − N días. Ambas fechas se deslizan solas pasando las 00:00.
+         */
+        function calcularRangoGrabacion(diasDisponibles) {
+            if (diasDisponibles === null || diasDisponibles === undefined || diasDisponibles === '') return null;
+            const dias = parseInt(diasDisponibles);
+            if (isNaN(dias) || dias < 0) return null;
+
+            const hasta = new Date(fechaHoyPeru() + 'T00:00:00');
+            const desde = new Date(hasta);
+            desde.setDate(desde.getDate() - dias);
+
+            const aYMD = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            return { desde: aYMD(desde), hasta: aYMD(hasta) };
+        }
+
+        /** Vista previa en vivo del rango mientras se escribe el número de días en el formulario. */
+        function actualizarVistaPreviaRango() {
+            const valor = document.getElementById('diasGrabacionDisponibles').value;
+            const rango = calcularRangoGrabacion(valor);
+            document.getElementById('infoGrabacionDesde').textContent = rango
+                ? `Rango actual: ${formatearFecha(rango.desde)} – ${formatearFecha(rango.hasta)}`
+                : '';
+        }
+
+        function mostrarVistaGrabaciones(vista) {
+            document.getElementById('vistaRango').classList.toggle('vista-oculta', vista !== 'rango');
+            document.getElementById('vistaAuditar').classList.toggle('vista-oculta', vista !== 'auditar');
+            document.getElementById('tabRango').classList.toggle('tab-activo', vista === 'rango');
+            document.getElementById('tabAuditar').classList.toggle('tab-activo', vista === 'auditar');
+        }
+
         function actualizarColoresChart() {
             const estilos = getComputedStyle(document.documentElement);
             Chart.defaults.color = estilos.getPropertyValue('--text-muted').trim() || '#8aa0c2';
@@ -305,7 +413,7 @@
 
         async function cargarCamaras() {
             if (!SEDE) {
-                document.getElementById('tbodyCamaras').innerHTML = '<tr><td colspan="10" class="empty-state">No se indicó una sede válida en la URL.</td></tr>';
+                document.getElementById('tbodyCamaras').innerHTML = '<tr><td colspan="12" class="empty-state">No se indicó una sede válida en la URL.</td></tr>';
                 return;
             }
             const todas = await listarCamarasCCTV();
@@ -314,6 +422,7 @@
             renderizarGrafico();
             poblarSelectorCamaras();
             renderizarTabla();
+            renderizarTablaRango();
         }
 
         /** Llena el desplegable "Seleccionar cámara" con las cámaras que de verdad tiene esta sede. */
@@ -376,7 +485,7 @@
             const tbody = document.getElementById('tbodyCamaras');
             tbody.innerHTML = '';
             if (lista.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No hay cámaras que coincidan con los filtros.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="12" class="empty-state">No hay cámaras que coincidan con los filtros.</td></tr>`;
                 return;
             }
 
@@ -386,6 +495,7 @@
                     : c.estado === 'inoperativo' ? '<span class="badge-estado-camara badge-inoperativo">Inoperativo</span>'
                     : '<span class="badge-estado-camara badge-sin-auditar">Sin auditar</span>';
 
+                const rango = calcularRangoGrabacion(c.dias_grabacion_disponibles);
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${c.numero ?? '—'}</td>
@@ -393,9 +503,11 @@
                     <td>${c.tipo_camara || '—'}</td>
                     <td class="celda-nvr">${c.nvr_asociado || '—'}</td>
                     <td>${badgeEstado}</td>
-                    <td>${c.dias_grabacion ?? '—'}</td>
+                    <td>${rango ? formatearFecha(rango.desde) : '—'}</td>
+                    <td>${rango ? formatearFecha(rango.hasta) : '—'}</td>
+                    <td>${c.dias_grabacion_disponibles ?? '—'}</td>
                     <td>${c.auditor || '—'}</td>
-                    <td>${c.fecha_auditoria || '—'}</td>
+                    <td>${formatearFecha(c.fecha_auditoria) || '—'}</td>
                     <td>${c.observaciones || '—'}</td>
                     <td class="acciones-persona">
                         <button class="btn-sm btn-edit" onclick="verHistorialCamara(${c.id}, '${c.camara.replace(/'/g, "\\'")}')" title="Ver historial de auditorías">📜</button>
@@ -409,12 +521,65 @@
             });
         }
 
+        /** Tabla ligera de la pestaña "Rango de Grabación": solo lectura, sin acciones. */
+        function renderizarTablaRango() {
+            const texto = (document.getElementById('filtroTextoRango')?.value || '').toLowerCase().trim();
+            const filtroEstado = document.getElementById('filtroEstadoRango')?.value || 'todos';
+
+            const lista = camarasCache.filter(c => {
+                const cumpleTexto = !texto || c.camara.toLowerCase().includes(texto);
+                let cumpleEstado = true;
+                if (filtroEstado === 'operativo') cumpleEstado = c.estado === 'operativo';
+                else if (filtroEstado === 'inoperativo') cumpleEstado = c.estado === 'inoperativo';
+                else if (filtroEstado === 'sin_auditar') cumpleEstado = !c.estado;
+                return cumpleTexto && cumpleEstado;
+            }).slice().sort((a, b) => (a.numero ?? 0) - (b.numero ?? 0));
+
+            const tbody = document.getElementById('tbodyRango');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (lista.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay cámaras que coincidan con los filtros.</td></tr>`;
+                return;
+            }
+
+            lista.forEach(c => {
+                const badgeEstado = c.estado === 'operativo' ? '<span class="badge-estado-camara badge-operativo">Operativo</span>'
+                    : c.estado === 'inoperativo' ? '<span class="badge-estado-camara badge-inoperativo">Inoperativo</span>'
+                    : '<span class="badge-estado-camara badge-sin-auditar">Sin auditar</span>';
+                const rango = calcularRangoGrabacion(c.dias_grabacion_disponibles);
+                const dias = c.dias_grabacion_disponibles ?? null;
+                const claseAlerta = dias === null ? '' : (dias <= 7 ? 'dias-alerta' : 'dias-ok');
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${c.numero ?? '—'}</td>
+                    <td><strong>${c.camara}</strong></td>
+                    <td>${c.tipo_camara || '—'}</td>
+                    <td>${rango ? formatearFecha(rango.desde) : '—'}</td>
+                    <td>${rango ? formatearFecha(rango.hasta) : '—'}</td>
+                    <td class="celda-dias-grabacion ${claseAlerta}">${dias ?? '—'}</td>
+                    <td>${badgeEstado}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
         async function guardarCamara(e) {
             if (!validarCamposRequeridos(['camara'])) return;
             if (!estaEnLinea()) { mostrarAviso('No hay conexión a internet. Espera a que vuelva la señal.', 'error'); return; }
 
             const editId = document.getElementById('editId').value;
             const { data: { user } } = await supabaseClient.auth.getUser();
+            const fechaAuditoriaForm = document.getElementById('fechaAuditoria').value || null;
+
+            // Días de grabación disponibles (lo que audita la persona). Si al editar se
+            // deja el campo vacío, se conserva el valor que ya tenía la cámara.
+            const camaraPrevia = editId ? camarasCache.find(x => x.id === parseInt(editId)) : null;
+            const diasGrabacionForm = document.getElementById('diasGrabacionDisponibles').value;
+            const diasGrabacionDisponibles = diasGrabacionForm !== ''
+                ? parseInt(diasGrabacionForm)
+                : (camaraPrevia ? camaraPrevia.dias_grabacion_disponibles : null);
 
             const registro = {
                 sede: SEDE,
@@ -423,9 +588,9 @@
                 tipo_camara: document.getElementById('tipoCamara').value,
                 nvr_asociado: document.getElementById('nvrAsociado').value || null,
                 estado: document.getElementById('estado').value || null,
-                dias_grabacion: document.getElementById('diasGrabacion').value ? parseInt(document.getElementById('diasGrabacion').value) : null,
+                dias_grabacion_disponibles: diasGrabacionDisponibles,
                 auditor: document.getElementById('auditor').value || '',
-                fecha_auditoria: document.getElementById('fechaAuditoria').value || null,
+                fecha_auditoria: fechaAuditoriaForm,
                 observaciones: document.getElementById('observaciones').value.trim(),
             };
 
@@ -452,7 +617,7 @@
             // Deja constancia en el historial de esta cámara (para poder ver auditorías anteriores).
             await registrarHistorialCamara(camaraId, {
                 estado: registro.estado,
-                dias_grabacion: registro.dias_grabacion,
+                dias_grabacion_disponibles: registro.dias_grabacion_disponibles,
                 auditor: registro.auditor,
                 fecha_auditoria: registro.fecha_auditoria,
                 observaciones: registro.observaciones,
@@ -474,10 +639,15 @@
             document.getElementById('tipoCamara').value = c.tipo_camara || 'FIJA';
             document.getElementById('nvrAsociado').value = c.nvr_asociado || '';
             document.getElementById('estado').value = c.estado || '';
-            document.getElementById('diasGrabacion').value = c.dias_grabacion ?? '';
             document.getElementById('auditor').value = c.auditor || '';
             document.getElementById('fechaAuditoria').value = c.fecha_auditoria || '';
             document.getElementById('observaciones').value = c.observaciones || '';
+            document.getElementById('diasGrabacionDisponibles').value = c.dias_grabacion_disponibles ?? '';
+
+            const rango = calcularRangoGrabacion(c.dias_grabacion_disponibles);
+            document.getElementById('infoGrabacionDesde').textContent = rango
+                ? `Rango actual: ${formatearFecha(rango.desde)} – ${formatearFecha(rango.hasta)}`
+                : 'Aún no se ha auditado la capacidad de grabación.';
 
             const btn = document.getElementById('btnSubmit');
             btn.textContent = 'Actualizar Cámara';
@@ -501,14 +671,14 @@
                 const badgeEstado = h.estado === 'operativo' ? '<span class="badge-estado-camara badge-operativo">Operativo</span>'
                     : h.estado === 'inoperativo' ? '<span class="badge-estado-camara badge-inoperativo">Inoperativo</span>'
                     : '<span class="badge-estado-camara badge-sin-auditar">Sin auditar</span>';
-                const fechaRegistro = new Date(h.registrado_en).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' });
+                const fechaRegistro = formatearFechaHora(h.registrado_en);
                 return `
                     <tr>
                         <td>${fechaRegistro}${i === 0 ? ' <span class="chip-resumen chip-actualiza">Último</span>' : ''}</td>
                         <td>${badgeEstado}</td>
-                        <td>${h.dias_grabacion ?? '—'}</td>
+                        <td>${h.dias_grabacion_disponibles ?? '—'}</td>
                         <td>${h.auditor || '—'}</td>
-                        <td>${h.fecha_auditoria || '—'}</td>
+                        <td>${formatearFecha(h.fecha_auditoria) || '—'}</td>
                         <td>${h.observaciones || '—'}</td>
                     </tr>
                 `;
@@ -522,6 +692,7 @@
         function resetearFormulario() {
             document.getElementById('formCamara').reset();
             document.getElementById('editId').value = '';
+            document.getElementById('infoGrabacionDesde').textContent = '';
             const btn = document.getElementById('btnSubmit');
             btn.textContent = 'Agregar Cámara';
             btn.classList.remove('btn-mode-update');
@@ -545,11 +716,14 @@
                     'Tipo de Cámara': c.tipo_camara || '',
                 };
                 if (SEDE === 'QOLQAS') fila['NVR Asociado'] = c.nvr_asociado || '';
+                const rango = calcularRangoGrabacion(c.dias_grabacion_disponibles);
                 Object.assign(fila, {
                     Estado: c.estado === 'operativo' ? 'OPERATIVO' : c.estado === 'inoperativo' ? 'INOPERATIVO' : 'SIN AUDITAR',
-                    'Días de Grabación': c.dias_grabacion ?? '',
+                    'Grabación desde': rango ? formatearFecha(rango.desde) : '',
+                    'Grabación hasta': rango ? formatearFecha(rango.hasta) : '',
+                    'Días de Grabación': c.dias_grabacion_disponibles ?? '',
                     Auditor: c.auditor || '',
-                    'Fecha de Auditoría': c.fecha_auditoria || '',
+                    'Fecha de Auditoría': formatearFecha(c.fecha_auditoria),
                     Observaciones: c.observaciones || '',
                 });
                 return fila;
@@ -558,7 +732,7 @@
             const hoja = XLSX.utils.json_to_sheet(filas);
             const libro = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(libro, hoja, SEDE || 'Camaras');
-            const fecha = new Date().toISOString().slice(0, 10);
+            const fecha = fechaHoyPeru();
             XLSX.writeFile(libro, `camaras_${(SEDE || 'sede').toLowerCase()}_${fecha}.xlsx`);
         }
 
@@ -655,6 +829,26 @@
             cerrarModalImagenes();
         }
 
+        /* ---------- Observaciones generales de la sede (un solo texto, separado de las por cámara) ---------- */
+        async function abrirModalObservacionesSede() {
+            const texto = await obtenerObservacionesSede(SEDE);
+            document.getElementById('inputObservacionesSede').value = texto || '';
+            document.getElementById('modalObservacionesSede').style.display = 'flex';
+        }
+
+        function cerrarModalObservacionesSede() {
+            document.getElementById('modalObservacionesSede').style.display = 'none';
+        }
+
+        async function guardarObservacionesSedeModal() {
+            if (!estaEnLinea()) { mostrarAviso('No hay conexión a internet. Espera a que vuelva la señal.', 'error'); return; }
+            const texto = document.getElementById('inputObservacionesSede').value.trim();
+            const ok = await guardarObservacionesSede(SEDE, texto);
+            if (!ok) return;
+            mostrarAviso('Observaciones de la sede guardadas.', 'exito');
+            cerrarModalObservacionesSede();
+        }
+
         /* ============================================================
            CARGA MASIVA DESDE EXCEL (cámaras de esta sede)
            ============================================================ */
@@ -668,7 +862,7 @@
 
         function descargarPlantillaCamaras() {
             const columnas = columnasExcelCamaras();
-            const ejemplo = { Numero: 1, Camara: 'CAM001', TipoCamara: 'FIJA', Estado: 'OPERATIVO', DiasGrabacion: 15, Auditor: 'Jhonny Teran', FechaAuditoria: '2026-10-01', Observaciones: '' };
+            const ejemplo = { Numero: 1, Camara: 'CAM001', TipoCamara: 'FIJA', Estado: 'OPERATIVO', DiasGrabacion: 30, Auditor: 'Jhonny Teran', FechaAuditoria: '2026-10-01', Observaciones: '' };
             if (SEDE === 'QOLQAS') ejemplo.NVR = 'NVR_01';
 
             const filaEjemplo = columnas.map(c => ejemplo[c] ?? '');
@@ -724,6 +918,13 @@
                     const valido = !!camara;
                     const existente = valido ? camarasCache.find(c => c.camara === camara) : null;
 
+                    const fechaAuditoriaFila = fila.FechaAuditoria ? String(fila.FechaAuditoria).trim() : null;
+                    // Días de grabación disponibles: si la fila no trae el dato, se conserva
+                    // el que ya tenía la cámara (actualización parcial).
+                    const diasGrabacionFila = fila.DiasGrabacion !== '' && fila.DiasGrabacion !== undefined && fila.DiasGrabacion !== null
+                        ? parseInt(fila.DiasGrabacion)
+                        : (existente ? existente.dias_grabacion_disponibles : null);
+
                     return {
                         valido,
                         accion: !valido ? 'error' : (existente ? 'actualiza' : 'nuevo'),
@@ -735,9 +936,9 @@
                             tipo_camara: String(fila.TipoCamara || '').trim() || 'SIN DESCRIPCION',
                             nvr_asociado: SEDE === 'QOLQAS' ? (String(fila.NVR || '').trim() || null) : null,
                             estado: valorAfirmativoEstado(fila.Estado),
-                            dias_grabacion: fila.DiasGrabacion ? parseInt(fila.DiasGrabacion) : null,
+                            dias_grabacion_disponibles: diasGrabacionFila,
                             auditor: String(fila.Auditor || '').trim(),
-                            fecha_auditoria: fila.FechaAuditoria ? String(fila.FechaAuditoria).trim() : null,
+                            fecha_auditoria: fechaAuditoriaFila,
                             observaciones: String(fila.Observaciones || '').trim(),
                         }
                     };
@@ -782,6 +983,7 @@
                         <td>${r.camara || '—'}</td>
                         <td>${r.tipo_camara || '—'}</td>
                         <td>${badgeEstado}</td>
+                        <td>${r.dias_grabacion_disponibles ?? '—'}</td>
                         <td>${r.auditor || '—'}</td>
                         <td>${etiquetaAccion}</td>
                     </tr>
@@ -826,7 +1028,7 @@
                     f.accion === 'actualiza' ? actualizados++ : agregados++;
                     await registrarHistorialCamara(camaraId, {
                         estado: f.registro.estado,
-                        dias_grabacion: f.registro.dias_grabacion,
+                        dias_grabacion_disponibles: f.registro.dias_grabacion_disponibles,
                         auditor: f.registro.auditor,
                         fecha_auditoria: f.registro.fecha_auditoria,
                         observaciones: f.registro.observaciones,

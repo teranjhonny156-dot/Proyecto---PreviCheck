@@ -429,7 +429,7 @@
         function resetearFormulario() {
             document.getElementById('formPrecinto').reset();
             document.getElementById('editId').value = '';
-            document.getElementById('fecha').valueAsDate = new Date();
+            document.getElementById('fecha').value = fechaHoyPeru();
             document.getElementById('color').value = 'NARANJA';
             const btn = document.getElementById('btnSubmitPrecinto');
             btn.textContent = 'Registrar Despacho';
@@ -569,7 +569,7 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${i + 1}</td>
-                    <td>${p.fecha || ''}</td>
+                    <td>${formatearFecha(p.fecha)}</td>
                     <td>${p.hora || '—'}</td>
                     <td>${p.cd_almacen || '—'}</td>
                     <td>${p.placa}</td>
@@ -614,7 +614,7 @@
             if (ultimaListaFiltrada.length === 0) { mostrarAviso('No hay despachos para exportar con los filtros actuales.', 'advertencia'); return; }
 
             const filas = ultimaListaFiltrada.map(p => ({
-                Fecha: p.fecha || '',
+                Fecha: formatearFecha(p.fecha),
                 Hora: p.hora || '',
                 'CD/Almacén': p.cd_almacen,
                 Placa: p.placa,
@@ -631,7 +631,7 @@
             const hoja = XLSX.utils.json_to_sheet(filas);
             const libro = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(libro, hoja, 'Precintos');
-            const fecha = new Date().toISOString().slice(0, 10);
+            const fecha = fechaHoyPeru();
             XLSX.writeFile(libro, `precintos_${fecha}.xlsx`);
         }
 
@@ -665,7 +665,7 @@
             poblarSelectsEstaticos();
             await Promise.all([cargarOpciones('destino'), cargarOpciones('encargado'), cargarOpciones('color')]);
             document.getElementById('color').value = 'NARANJA';
-            document.getElementById('fecha').valueAsDate = new Date();
+            document.getElementById('fecha').value = fechaHoyPeru();
             await cargarYRenderizarTodo();
         });
     </script>

@@ -327,7 +327,7 @@
                 const cumplidos = lista.filter(i => i.cumple).length;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${insp.fecha}</td>
+                    <td>${formatearFecha(insp.fecha)}</td>
                     <td><span class="badge-resultado ${cumplidos === lista.length ? 'badge-completo' : 'badge-pendiente'}">${cumplidos} / ${lista.length} cumplidos</span></td>
                     <td>${insp.comentarios || '—'}</td>
                     <td>${insp.link_onedrive ? `<a href="${insp.link_onedrive}" target="_blank" rel="noopener" class="btn-download">🔗 Ver evidencias</a>` : '—'}</td>
@@ -377,7 +377,7 @@
 
             mostrarAviso('Inspección registrada correctamente.', 'exito');
             document.getElementById('formInspeccion').reset();
-            document.getElementById('fechaInspeccion').valueAsDate = new Date();
+            document.getElementById('fechaInspeccion').value = fechaHoyPeru();
             construirChecklistForm();
             await cargarInspecciones();
         }
@@ -394,7 +394,7 @@
             const session = await exigirSesion();
             if (!session) return;
 
-            document.getElementById('fechaInspeccion').valueAsDate = new Date();
+            document.getElementById('fechaInspeccion').value = fechaHoyPeru();
             construirChecklistForm();
 
             await cargarCasilleros();

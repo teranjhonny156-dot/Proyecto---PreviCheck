@@ -290,6 +290,19 @@ async function guardarLinkImagenesSede(sede, link) {
     return true;
 }
 
+/* ---------- 10b. Observaciones Generales por Sede (Control de Grabaciones) ---------- */
+async function obtenerObservacionesSede(sede) {
+    const { data, error } = await supabaseClient.from('grabaciones_observaciones').select('observaciones').eq('sede', sede).maybeSingle();
+    if (error) { manejarErrorSupabase(error, 'obteniendo las observaciones de la sede'); return null; }
+    return data ? data.observaciones : null;
+}
+
+async function guardarObservacionesSede(sede, observaciones) {
+    const { error } = await supabaseClient.from('grabaciones_observaciones').upsert({ sede, observaciones, actualizado_en: new Date().toISOString() });
+    if (error) { manejarErrorSupabase(error, 'guardando las observaciones de la sede'); return false; }
+    return true;
+}
+
 /* ---------- 11. Historial de Auditorías por Cámara ---------- */
 async function registrarHistorialCamara(camaraId, datos) {
     const { error } = await supabaseClient.from('camaras_cctv_historial').insert({ camara_id: camaraId, ...datos });

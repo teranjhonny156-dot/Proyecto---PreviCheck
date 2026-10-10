@@ -13,6 +13,44 @@
     background-color: #475569;
 }
 
+/* ----- Tabs (mismo patrón que cctv.html / precintos.html) ----- */
+.tabs-cctv {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.tab-boton {
+    padding: 9px 18px;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-color);
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.tab-boton.tab-activo {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+.vista-oculta {
+    display: none;
+}
+
+/* ----- Tabla ligera "Rango de Grabación" ----- */
+.celda-dias-grabacion {
+    font-weight: 700;
+}
+.celda-dias-grabacion.dias-alerta { color: var(--badge-rojo-text); }
+.celda-dias-grabacion.dias-ok { color: var(--badge-verde-text); }
+
 /* ----- KPIs ----- */
 .kpi-container-4 {
     display: grid;
