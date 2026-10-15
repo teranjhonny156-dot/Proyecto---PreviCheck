@@ -135,6 +135,20 @@ async function guardarCasoCCTVRemoto(registro, idExistente) {
     return true;
 }
 
+async function listarTodoHistorialCasosCCTV() {
+    return await listarTodasLasFilas('estadisticas_cctv_historial', 'registrado_en', false, 'listando historial de casos');
+}
+
+async function listarHistorialCasoCCTV(casoId) {
+    const { data, error } = await supabaseClient
+        .from('estadisticas_cctv_historial')
+        .select('*')
+        .eq('caso_id', casoId)
+        .order('registrado_en', { ascending: false });
+    if (error) { manejarErrorSupabase(error, 'listando historial del caso'); return null; }
+    return data || [];
+}
+
 async function eliminarCasoCCTVRemoto(id) {
     const { error } = await supabaseClient.from('estadisticas_cctv').delete().eq('id', id);
     if (error) { manejarErrorSupabase(error, 'eliminando caso CCTV'); return false; }
@@ -308,6 +322,10 @@ async function registrarHistorialCamara(camaraId, datos) {
     const { error } = await supabaseClient.from('camaras_cctv_historial').insert({ camara_id: camaraId, ...datos });
     if (error) { manejarErrorSupabase(error, 'registrando historial de auditoría'); return false; }
     return true;
+}
+
+async function listarTodoHistorialCamaras() {
+    return await listarTodasLasFilas('camaras_cctv_historial', 'registrado_en', false, 'listando historial de cámaras');
 }
 
 async function listarHistorialCamara(camaraId) {

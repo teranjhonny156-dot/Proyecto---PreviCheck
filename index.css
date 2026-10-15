@@ -11,7 +11,7 @@ body {
     min-height: 100vh;
     background: radial-gradient(circle at 15% 15%, rgba(93, 183, 75, 0.10), transparent 40%),
                 radial-gradient(circle at 85% 20%, rgba(31, 139, 201, 0.10), transparent 40%),
-                radial-gradient(circle at 50% 90%, rgba(226, 31, 122, 0.08), transparent 45%),
+                radial-gradient(circle at 50% 90%, rgba(31, 139, 201, 0.08), transparent 45%),
                 var(--bg-color);
 }
 
@@ -149,7 +149,7 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    box-shadow: 0 8px 24px rgba(226, 31, 122, 0.18), var(--shadow-md);
+    box-shadow: 0 8px 24px rgba(31, 139, 201, 0.18), var(--shadow-md);
     text-align: center;
 }
 

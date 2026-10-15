@@ -21,6 +21,7 @@
     </header>
 
     <h2 class="main-title">Cumplimiento de Capacitaciones Obligatorias</h2>
+    <p class="subtitulo-modulo">¿Qué parte del personal cumple con sus capacitaciones de seguridad obligatorias?</p>
 
     <div class="dashboard-container dashboard-columna-unica">
         <div class="panel-right panel-ancho-completo">
@@ -141,6 +142,7 @@
                     </select>
                     <input type="text" id="filtroNombre" class="form-control input-nombre-filtro" placeholder="Buscar trabajador..." oninput="renderizarMatriz()">
                     <button type="button" class="btn-sm btn-plantilla-excel" onclick="exportarExcelCapacitaciones()">⬇️ Exportar a Excel</button>
+                    <button type="button" class="btn-sm btn-plantilla-excel" onclick="respaldoCapacitaciones(this)" title="Descarga todo el personal con todas sus columnas, sin filtros">💾 Respaldo completo</button>
                 </div>
             </div>
 
@@ -258,6 +260,7 @@
     </div>
 
     <script src="errores.js"></script>
+    <script src="negocio.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -316,6 +319,12 @@
             c7: 'Seguridad como forma de vida',
         };
 
+        function respaldoCapacitaciones(boton) {
+            ejecutarRespaldo(boton, async () => {
+                exportarRespaldoExcel('capacitaciones', [{ nombre: 'Personal', filas: await listarPersonalCapacitaciones() }]);
+            });
+        }
+
         function renderizarGraficas() {
             Object.values(graficos).forEach(g => g && g.destroy());
             graficos = {};
@@ -330,7 +339,7 @@
             graficos.unica = new Chart(canvas, {
                 type: 'pie',
                 data: {
-                    labels: ['Completó', 'Pendiente'],
+                    labels: [`Completó (${completados})`, `Pendiente (${pendientes})`],
                     datasets: [{ data: [completados, pendientes], backgroundColor: ['#16a34a', '#dc2626'] }]
                 },
                 options: {
@@ -338,6 +347,7 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { position: 'bottom' },
+                        tooltip: TOOLTIP_PORCENTAJE,
                         title: {
                             display: true,
                             text: `${NOMBRES_CAPACITACIONES[campo]} — ${completados} / ${registrosCache.length} completó`,

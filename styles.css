@@ -4,8 +4,8 @@
    verde, azul y rosa/magenta sobre grafito.
    ========================================== */
 :root {
-    --primary-color: #e21f7a;
-    --primary-hover: #b5165f;
+    --primary-color: #1f8bc9;   /* azul institucional (el rosa queda solo en el logo) */
+    --primary-hover: #176fa8;
     --secondary-color: #22c55e;
     --secondary-hover: #16a34a;
     --danger-color: #ef4444;
@@ -516,4 +516,63 @@ table tbody tr:hover,
     .table-actions-bar { flex-direction: column; align-items: flex-start; }
     .action-buttons { width: 100%; flex-direction: column; }
     .action-buttons .btn { width: 100%; }
+}
+/* ==========================================
+   COMPONENTES PARA LECTURA DE GERENCIA
+   (ayuda, subtítulos, códigos, impresión)
+   ========================================== */
+.subtitulo-modulo {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: -12px 0 16px;
+}
+
+.fila-subtitulo {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+.fila-subtitulo .subtitulo-modulo { margin: -12px 0 0; }
+
+.ultima-actualizacion {
+    color: var(--text-muted);
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+/* ⓘ con explicación al pasar el mouse */
+.info-tip {
+    display: inline-block;
+    margin-left: 3px;
+    color: var(--primary-color);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: help;
+    text-transform: none;
+}
+
+/* Folios, placas y códigos de cámara en letra de ancho fijo */
+.codigo {
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
+    letter-spacing: 0.2px;
+}
+
+/* Leyenda de semáforos */
+.leyenda-semaforo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 16px 0 6px;
+}
+
+.acciones-subtitulo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
 }

@@ -1,5 +1,5 @@
 :root {
-    --primary-color: #e21f7a;
+    --primary-color: #1f8bc9;
     --secondary-color: #1c2540;
     --accent-color: #1f8bc9;
     --background-color: #0b1220;
@@ -58,7 +58,7 @@ header {
     background-color: var(--card-background);
     padding: 15px 25px;
     border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,.12));
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -79,9 +79,14 @@ header {
     align-items: center;
 }
 
+.logo-container {
+    max-width: 130px;
+}
+
 .logo-container img {
-    height: 40px;
-    object-fit: contain;
+    width: 100%;
+    height: auto;
+    display: block;
 }
 
 .sub-title {
@@ -106,9 +111,10 @@ header {
 }
 
 .main-title {
-    font-size: 20px;
+    font-size: 22px;
+    font-weight: 700;
     color: var(--title-color);
-    margin-bottom: 5px;
+    margin-bottom: 20px;
 }
 
 .dashboard-container {
@@ -120,7 +126,7 @@ header {
     background-color: var(--card-background);
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,.12));
     border: 1px solid var(--border-color);
     overflow-x: auto;
 }
@@ -200,3 +206,5 @@ input[type="checkbox"] {
     color: var(--text-muted);
     font-style: italic;
 }
+
+.subtitulo-modulo { margin: -12px 0 16px; }

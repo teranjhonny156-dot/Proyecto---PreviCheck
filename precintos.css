@@ -85,6 +85,7 @@
 .kpi-icono--verde   { background: var(--badge-verde-bg); color: var(--badge-verde-text); }
 .kpi-icono--rojo    { background: var(--badge-rojo-bg); color: var(--badge-rojo-text); }
 .kpi-icono--azul    { background: var(--badge-azul-bg); color: var(--badge-azul-text); }
+.kpi-icono--amarillo { background: var(--badge-amarillo-bg); color: var(--badge-amarillo-text); }
 
 .kpi-label {
     font-size: 11px;
@@ -101,6 +102,15 @@
 .kpi-valor--verde   { color: #16a34a; }
 .kpi-valor--rojo    { color: #dc2626; }
 .kpi-valor--azul    { color: #0284c7; }
+.kpi-valor--amarillo { color: #b45309; }
+
+.kpi-sublabel {
+    display: block;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-top: 2px;
+}
 .kpi-valor-texto    { font-size: 14px; }
 
 /* ----- Gráficas: 2 columnas x 2 filas -----

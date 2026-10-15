@@ -107,8 +107,9 @@
 .titulo-grafica {
     font-size: 14px;
     color: var(--title-color);
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     font-weight: 700;
+    text-align: center;
 }
 
 .grafica-canvas-wrap {

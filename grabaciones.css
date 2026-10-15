@@ -27,6 +27,7 @@
 }
 
 .nodo-raiz {
+    position: relative;
     background: var(--card-bg);
     border: 2px solid var(--primary-color);
     border-radius: 12px;
@@ -35,9 +36,26 @@
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    box-shadow: 0 8px 24px rgba(226, 31, 122, 0.18), var(--shadow-md);
+    box-shadow: 0 8px 24px rgba(31, 139, 201, 0.18), var(--shadow-md);
     text-align: center;
 }
+
+/* ----- Semáforo de riesgo por sede ----- */
+.semaforo-sede {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--card-bg);
+    box-shadow: 0 0 0 1px var(--border-color);
+}
+
+.semaforo-sede.semaforo-verde    { background: #16a34a; }
+.semaforo-sede.semaforo-amarillo { background: #f59e0b; }
+.semaforo-sede.semaforo-rojo     { background: #dc2626; }
+.semaforo-sede.semaforo-gris     { background: #94a3b8; }
 
 .nodo-raiz-clicable {
     text-decoration: none;
@@ -47,7 +65,7 @@
 
 .nodo-raiz-clicable:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(226, 31, 122, 0.28), var(--shadow-md);
+    box-shadow: 0 12px 30px rgba(31, 139, 201, 0.28), var(--shadow-md);
 }
 
 .nodo-raiz h2 {

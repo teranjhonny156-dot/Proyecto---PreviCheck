@@ -22,6 +22,7 @@
     </header>
 
     <h2 class="main-title">Control de Casilleros (180)</h2>
+    <p class="subtitulo-modulo">¿Cómo está el uso y la inspección de los 180 casilleros del personal?</p>
 
     <div class="resumen-grid">
         <div class="kpi-columna">
@@ -69,6 +70,7 @@
                 <option value="en_uso">Solo en uso</option>
                 <option value="disponible">Solo disponibles</option>
             </select>
+            <button type="button" class="btn-sm btn-edit" onclick="respaldoCasilleros(this)" title="Descarga todos los casilleros y las inspecciones, sin filtros">💾 Respaldo completo</button>
         </div>
 
         <div class="table-scroll-container">
@@ -161,6 +163,8 @@
     </div>
 
     <script src="errores.js"></script>
+    <script src="negocio.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -225,10 +229,20 @@
             graficoOcupacion = new Chart(document.getElementById('graficoOcupacion'), {
                 type: 'pie',
                 data: {
-                    labels: ['En uso', 'Disponible'],
+                    labels: [`En uso (${enUso})`, `Disponible (${disponibles})`],
                     datasets: [{ data: [enUso, disponibles], backgroundColor: ['#dc2626', '#16a34a'] }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, tooltip: TOOLTIP_PORCENTAJE } }
+            });
+        }
+
+        function respaldoCasilleros(boton) {
+            ejecutarRespaldo(boton, async () => {
+                const [casilleros, inspecciones] = await Promise.all([listarCasilleros(), listarInspeccionesCasilleros()]);
+                exportarRespaldoExcel('casilleros', [
+                    { nombre: 'Casilleros', filas: casilleros },
+                    { nombre: 'Inspecciones', filas: inspecciones }
+                ]);
             });
         }
 

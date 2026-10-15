@@ -21,10 +21,15 @@
     </header>
 
     <h2 class="main-title">Auditoría de Cámaras por Sede</h2>
-    <p class="subtitulo-grabaciones">Selecciona una sede para ver y auditar sus cámaras.</p>
+    <div class="fila-subtitulo">
+        <p class="subtitulo-grabaciones">¿Cuántos días de grabación tiene cada sede? Selecciona una sede para ver y auditar sus cámaras.</p>
+        <span class="acciones-subtitulo"><span id="ultimaActualizacion" class="ultima-actualizacion"></span> <button type="button" class="btn-sm btn-edit" onclick="respaldoGrabaciones(this)" title="Descarga todas las cámaras de todas las sedes y su historial de auditorías">💾 Respaldo completo</button></span>
+    </div>
+
 
     <div class="organigrama-menu">
         <a href="grabaciones-detalle.html?sede=QOLQAS" class="nodo-raiz nodo-raiz-clicable">
+            <span id="semaforoQOLQAS" class="semaforo-sede semaforo-gris" title="Cargando…"></span>
             <div class="nodo-icono nodo-icono-raiz">🏢</div>
             <h2>QOLQAS</h2>
             <p class="contador-camaras" id="contadorQOLQAS">— cámaras</p>
@@ -37,7 +42,14 @@
         </div>
     </div>
 
+    <div class="leyenda-semaforo">
+        <strong>Semáforo por sede (cámara con menos días de grabación):</strong>
+        <span>🟢 más de 14 días</span><span>🟡 8 a 14 días</span><span>🔴 7 días o menos</span><span>⚪ sin cámaras o sin auditar</span>
+    </div>
+
     <script src="errores.js"></script>
+    <script src="negocio.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script>
@@ -47,11 +59,31 @@
             const cont = document.getElementById('nodosCT');
             cont.innerHTML = CENTROS_TRANSFERENCIA.map(sede => `
                 <a href="grabaciones-detalle.html?sede=${encodeURIComponent(sede)}" class="nodo-hijo">
+                    <span id="semaforo-${sede}" class="semaforo-sede semaforo-gris" title="Cargando…"></span>
                     <div class="nodo-icono">📍</div>
                     <h3>CT ${sede.charAt(0) + sede.slice(1).toLowerCase()}</h3>
                     <p class="contador-camaras">${conteos[sede] || 0} cámaras</p>
                 </a>
             `).join('');
+        }
+
+        function respaldoGrabaciones(boton) {
+            ejecutarRespaldo(boton, async () => {
+                const [camaras, historial] = await Promise.all([listarCamarasCCTV(), listarTodoHistorialCamaras()]);
+                exportarRespaldoExcel('grabaciones', [
+                    { nombre: 'Cámaras', filas: camaras },
+                    { nombre: 'Historial de auditorías', filas: historial }
+                ]);
+            });
+        }
+
+        function pintarSemaforo(elementId, camarasSede) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const { color, titulo } = calcularSemaforoSede(camarasSede);
+            el.classList.remove('semaforo-verde', 'semaforo-amarillo', 'semaforo-rojo', 'semaforo-gris');
+            el.classList.add('semaforo-' + color);
+            el.title = titulo;
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -60,11 +92,20 @@
 
             renderizarNodosCT({});
             const camaras = await listarCamarasCCTV();
+            document.getElementById('ultimaActualizacion').textContent = `Datos al ${fechaHoraActualPeru()}`;
             const conteos = {};
-            camaras.forEach(c => { conteos[c.sede] = (conteos[c.sede] || 0) + 1; });
+            const porSede = {};
+            camaras.forEach(c => {
+                conteos[c.sede] = (conteos[c.sede] || 0) + 1;
+                if (!porSede[c.sede]) porSede[c.sede] = [];
+                porSede[c.sede].push(c);
+            });
 
             document.getElementById('contadorQOLQAS').textContent = `${conteos['QOLQAS'] || 0} cámaras`;
             renderizarNodosCT(conteos);
+
+            pintarSemaforo('semaforoQOLQAS', porSede['QOLQAS']);
+            CENTROS_TRANSFERENCIA.forEach(sede => pintarSemaforo('semaforo-' + sede, porSede[sede]));
         });
     </script>
 </body>

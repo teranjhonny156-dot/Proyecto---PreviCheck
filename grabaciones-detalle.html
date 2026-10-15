@@ -348,6 +348,7 @@
     </div>
 
     <script src="errores.js"></script>
+    <script src="negocio.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -458,10 +459,10 @@
             grafico = new Chart(document.getElementById('graficoEstado'), {
                 type: 'pie',
                 data: {
-                    labels: ['Operativo', 'Inoperativo', 'Sin auditar'],
+                    labels: [`Operativo (${operativas})`, `Inoperativo (${inoperativas})`, `Sin auditar (${sinAuditar})`],
                     datasets: [{ data: [operativas, inoperativas, sinAuditar], backgroundColor: ['#16a34a', '#dc2626', '#94a3b8'] }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, tooltip: TOOLTIP_PORCENTAJE } }
             });
         }
 
@@ -499,7 +500,7 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${c.numero ?? '—'}</td>
-                    <td><strong>${c.camara}</strong></td>
+                    <td><strong class="codigo">${c.camara}</strong></td>
                     <td>${c.tipo_camara || '—'}</td>
                     <td class="celda-nvr">${c.nvr_asociado || '—'}</td>
                     <td>${badgeEstado}</td>
@@ -554,7 +555,7 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${c.numero ?? '—'}</td>
-                    <td><strong>${c.camara}</strong></td>
+                    <td><strong class="codigo">${c.camara}</strong></td>
                     <td>${c.tipo_camara || '—'}</td>
                     <td>${rango ? formatearFecha(rango.desde) : '—'}</td>
                     <td>${rango ? formatearFecha(rango.hasta) : '—'}</td>

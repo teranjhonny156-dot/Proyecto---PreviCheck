@@ -22,6 +22,11 @@
     </header>
 
     <h2 class="main-title">Control de Precintos</h2>
+    <div class="fila-subtitulo">
+        <p class="subtitulo-modulo">¿Cuántos despachos salen con precinto, cuántos precintos usamos y qué proporción termina en devolución?</p>
+        <span id="ultimaActualizacion" class="ultima-actualizacion"></span>
+    </div>
+
 
     <div class="tabs-cctv">
         <button type="button" id="tabResumen" class="tab-boton tab-activo" onclick="mostrarVista('resumen')">📊 Resumen</button>
@@ -41,31 +46,37 @@
             <div class="kpi-card">
                 <div class="kpi-icono kpi-icono--neutro">🚚</div>
                 <div>
-                    <span class="kpi-label">Total de Despachos</span>
+                    <span class="kpi-label">Total de Despachos <span class="info-tip" title="Cantidad de salidas de vehículo registradas en el período.">ⓘ</span></span>
                     <h4 id="kpiTotalDespachos" class="kpi-valor kpi-valor--neutro">0</h4>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-icono kpi-icono--azul">🔒</div>
                 <div>
-                    <span class="kpi-label">Total Precintos Usados</span>
+                    <span class="kpi-label">Total Precintos Usados <span class="info-tip" title="Suma de precintos colocados en todos los despachos.">ⓘ</span></span>
                     <h4 id="kpiTotalPrecintos" class="kpi-valor kpi-valor--azul">0</h4>
                 </div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-icono kpi-icono--rojo">↩️</div>
+                <div id="kpiDevolucionesIcono" class="kpi-icono kpi-icono--rojo">↩️</div>
                 <div>
-                    <span class="kpi-label">Devoluciones Registradas</span>
+                    <span class="kpi-label">Devoluciones Registradas <span class="info-tip" title="Despachos con operación Devoluciones y su porcentaje sobre el total. Verde ≤5%, amarillo ≤10%, rojo >10%.">ⓘ</span></span>
                     <h4 id="kpiDevoluciones" class="kpi-valor kpi-valor--rojo">0</h4>
+                    <span id="kpiDevolucionesPorcentaje" class="kpi-sublabel">0% de los despachos</span>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-icono kpi-icono--verde">📍</div>
                 <div>
-                    <span class="kpi-label">Destino Más Frecuente</span>
+                    <span class="kpi-label">Destino Más Frecuente <span class="info-tip" title="Destino al que más despachos se hicieron en el período.">ⓘ</span></span>
                     <h4 id="kpiDestinoTop" class="kpi-valor kpi-valor--verde kpi-valor-texto">—</h4>
                 </div>
             </div>
+        </div>
+
+        <div class="leyenda-semaforo">
+            <strong>Semáforo de devoluciones:</strong>
+            <span>🟢 hasta 5%</span><span>🟡 más de 5% y hasta 10%</span><span>🔴 más de 10% del total de despachos</span>
         </div>
 
         <div class="graficas-grid">
@@ -175,6 +186,7 @@
             <select id="filtroDestinoDetalle" class="form-control select-filtro" onchange="renderizarTablaDetalleFiltrada()"></select>
             <select id="filtroOperacionDetalle" class="form-control select-filtro" onchange="renderizarTablaDetalleFiltrada()"></select>
             <button type="button" class="btn-sm btn-edit" onclick="exportarExcelPrecintos()">⬇️ Exportar a Excel</button>
+            <button type="button" class="btn-sm btn-edit" onclick="respaldoPrecintos(this)" title="Descarga todos los despachos con todas sus columnas, sin filtros">💾 Respaldo completo</button>
         </div>
 
         <div class="table-scroll-container">
@@ -222,6 +234,7 @@
     </div>
 
     <script src="errores.js"></script>
+    <script src="negocio.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -459,6 +472,7 @@
             const totalDespachos = lista.length;
             const totalPrecintos = lista.reduce((acc, p) => acc + (Number(p.precintos_totales) || 0), 0);
             const devoluciones = lista.filter(p => p.operacion === 'DEVOLUCIONES').length;
+            const porcentajeDevoluciones = totalDespachos > 0 ? (devoluciones / totalDespachos * 100) : 0;
 
             const conteoDestino = {};
             lista.forEach(p => { if (p.destino) conteoDestino[p.destino] = (conteoDestino[p.destino] || 0) + 1; });
@@ -466,7 +480,14 @@
             let max = 0;
             Object.entries(conteoDestino).forEach(([d, c]) => { if (c > max) { max = c; destinoTop = d; } });
 
-            return { totalDespachos, totalPrecintos, devoluciones, destinoTop };
+            return { totalDespachos, totalPrecintos, devoluciones, porcentajeDevoluciones, destinoTop };
+        }
+
+        /* Semáforo de % de devoluciones: ≤5% verde, ≤10% amarillo, >10% rojo */
+        function calcularSemaforoDevoluciones(porcentaje) {
+            if (porcentaje <= 5) return 'verde';
+            if (porcentaje <= 10) return 'amarillo';
+            return 'rojo';
         }
 
         function agruparPorMes(lista, campoValor) {
@@ -488,6 +509,8 @@
         }
 
         /* ---------- Gráficas ---------- */
+        Chart.register(PLUGIN_VALORES_EN_BARRAS);
+
         function destruirCharts() {
             Object.values(charts).forEach(ch => ch && ch.destroy());
             charts = {};
@@ -524,13 +547,13 @@
             charts.destino = new Chart(document.getElementById('graficoDestino'), {
                 type: 'pie',
                 data: {
-                    labels: porDestino.map(d => d[0]),
+                    labels: porDestino.map(d => `${d[0]} (${d[1]})`),
                     datasets: [{
                         data: porDestino.map(d => d[1]),
                         backgroundColor: ['#16a34a', '#1f8bc9', '#f59e0b', '#e21f7a', '#7c3aed', '#0d9488', '#94a3b8', '#fbbf24', '#4ade80']
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, tooltip: TOOLTIP_PORCENTAJE } }
             });
 
             charts.almacen = new Chart(document.getElementById('graficoAlmacen'), {
@@ -543,7 +566,8 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     indexAxis: 'y',
-                    plugins: { legend: { display: false } },
+                    layout: { padding: { right: 28 } },
+                    plugins: { legend: { display: false }, valoresEnBarras: { activo: true } },
                     scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
                 }
             });
@@ -554,6 +578,17 @@
             document.getElementById('kpiTotalPrecintos').textContent = stats.totalPrecintos;
             document.getElementById('kpiDevoluciones').textContent = stats.devoluciones;
             document.getElementById('kpiDestinoTop').textContent = stats.destinoTop;
+
+            document.getElementById('kpiDevolucionesPorcentaje').textContent =
+                stats.porcentajeDevoluciones.toFixed(1) + '% de los despachos';
+
+            const semaforo = calcularSemaforoDevoluciones(stats.porcentajeDevoluciones);
+            const icono = document.getElementById('kpiDevolucionesIcono');
+            const valor = document.getElementById('kpiDevoluciones');
+            icono.classList.remove('kpi-icono--verde', 'kpi-icono--amarillo', 'kpi-icono--rojo');
+            valor.classList.remove('kpi-valor--verde', 'kpi-valor--amarillo', 'kpi-valor--rojo');
+            icono.classList.add('kpi-icono--' + semaforo);
+            valor.classList.add('kpi-valor--' + semaforo);
         }
 
         /* ---------- Detalle (tabla) ---------- */
@@ -572,7 +607,7 @@
                     <td>${formatearFecha(p.fecha)}</td>
                     <td>${p.hora || '—'}</td>
                     <td>${p.cd_almacen || '—'}</td>
-                    <td>${p.placa}</td>
+                    <td><span class="codigo">${p.placa}</span></td>
                     <td>${p.conductor}</td>
                     <td>${p.precintos_totales}</td>
                     <td>${p.precintos_laterales || '—'}</td>
@@ -608,6 +643,12 @@
 
             ultimaListaFiltrada = lista;
             renderizarTablaDetalle(lista);
+        }
+
+        function respaldoPrecintos(boton) {
+            ejecutarRespaldo(boton, async () => {
+                exportarRespaldoExcel('precintos', [{ nombre: 'Precintos', filas: await listarPrecintos() }]);
+            });
         }
 
         function exportarExcelPrecintos() {
@@ -655,6 +696,7 @@
 
         async function cargarYRenderizarTodo() {
             precintosCache = await listarPrecintos();
+            document.getElementById('ultimaActualizacion').textContent = `Datos al ${fechaHoraActualPeru()}`;
             poblarSelectorAnio(precintosCache);
             aplicarFiltrosYRenderizar();
         }

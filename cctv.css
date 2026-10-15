@@ -66,6 +66,45 @@
     margin-bottom: 22px;
 }
 
+/* 5 tarjetas en una sola fila; en pantallas medianas 3 + 2 equilibradas */
+.kpi-container-5 {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 15px;
+    margin-bottom: 22px;
+}
+
+.kpi-container-5 .kpi-card {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    gap: 8px;
+    padding: 18px 12px;
+    min-width: 0;
+}
+
+.kpi-container-5 .kpi-icono {
+    font-size: 22px;
+    padding: 8px 10px;
+    line-height: 1;
+}
+
+.kpi-container-5 .kpi-valor {
+    font-size: 22px;
+    overflow-wrap: anywhere;
+}
+
+.contador-tab {
+    display: inline-block;
+    min-width: 18px;
+    margin-left: 4px;
+    padding: 1px 6px;
+    border-radius: 9px;
+    font-size: 11px;
+    background: var(--badge-amarillo-bg);
+    color: var(--badge-amarillo-text);
+}
+
 .kpi-card {
     background: var(--surface-2);
     border: 1px solid var(--border-color);
@@ -85,6 +124,7 @@
 .kpi-icono--verde   { background: var(--badge-verde-bg); color: var(--badge-verde-text); }
 .kpi-icono--rojo    { background: var(--badge-rojo-bg); color: var(--badge-rojo-text); }
 .kpi-icono--azul    { background: var(--badge-azul-bg); color: var(--badge-azul-text); }
+.kpi-icono--amarillo { background: var(--badge-amarillo-bg); color: var(--badge-amarillo-text); }
 
 .kpi-label {
     font-size: 11px;
@@ -101,6 +141,7 @@
 .kpi-valor--verde   { color: #16a34a; }
 .kpi-valor--rojo    { color: #dc2626; }
 .kpi-valor--azul    { color: #0284c7; }
+.kpi-valor--amarillo { color: #b45309; }
 
 /* ----- Gráficas: 2 columnas x 2 filas -----
    Fila 1: Casos por Mes | Costos por Mes
@@ -202,12 +243,122 @@
     vertical-align: middle;
 }
 
+/* ----- Checkbox "Caso Cerrado" ----- */
+.form-group-checkbox {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.label-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--title-color);
+    cursor: pointer;
+}
+
+.label-checkbox input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.texto-ayuda-campo {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 25px;
+}
+
+/* ----- Estado del caso: Cerrado / Pendiente ----- */
+.badge-cerrado,
+.badge-pendiente {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.badge-cerrado {
+    background: var(--badge-verde-bg);
+    color: var(--badge-verde-text);
+}
+
+.badge-pendiente {
+    background: var(--badge-amarillo-bg);
+    color: var(--badge-amarillo-text);
+}
+
+/* ----- Vista Duplicados ----- */
+.texto-ayuda-validacion {
+    font-size: 13px;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+}
+
+.grupo-duplicado {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    padding: 16px;
+    margin-bottom: 18px;
+}
+
+.grupo-duplicado-titulo {
+    font-size: 14px;
+    color: var(--title-color);
+    margin-bottom: 12px;
+}
+
+.tabla-responsiva {
+    overflow-x: auto;
+}
+
+.tabla-duplicados {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.tabla-duplicados th,
+.tabla-duplicados td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.tabla-duplicados th {
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 10px;
+}
+
 /* ----- Modal de resumen: botón para abrir OneDrive ----- */
 .btn-abrir-onedrive {
     display: inline-flex;
     margin-top: 14px;
     text-decoration: none;
     width: 100%;
+}
+
+@media (max-width: 1100px) {
+    .kpi-container-5 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .kpi-container-5 .kpi-card { grid-column: span 2; }
+    .kpi-container-5 .kpi-card:nth-child(n+4) { grid-column: span 3; }
 }
 
 @media (max-width: 1024px) {
@@ -218,6 +369,160 @@
 
 @media (max-width: 640px) {
     .kpi-container-4 { grid-template-columns: 1fr 1fr; }
+    .kpi-container-5 { grid-template-columns: 1fr 1fr; }
+    .kpi-container-5 .kpi-card,
+    .kpi-container-5 .kpi-card:nth-child(n+4) { grid-column: auto; }
+    .kpi-container-5 .kpi-card:last-child { grid-column: 1 / -1; }
     .grid-formulario { grid-template-columns: 1fr; }
     .filtro-anio-container { margin-left: 0; }
 }
+/* ----- Folios con varias respuestas ----- */
+.aviso-folio-repetido {
+    display: block;
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--badge-azul-text);
+    background: var(--badge-azul-bg);
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
+.badge-principal,
+.badge-ampliacion {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    padding: 2px 7px;
+    border-radius: 8px;
+    margin-left: 4px;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.badge-principal {
+    background: var(--badge-verde-bg);
+    color: var(--badge-verde-text);
+}
+
+.badge-ampliacion {
+    background: var(--badge-azul-bg);
+    color: var(--badge-azul-text);
+}
+
+.grupo-cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.grupo-cabecera .grupo-duplicado-titulo { margin-bottom: 0; }
+
+.grupo-cuenta {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.enlace-evidencia {
+    color: var(--badge-azul-text);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.enlace-evidencia:hover { text-decoration: underline; }
+
+.nota-conteo {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: -6px 0 18px;
+}
+
+/* ----- Filtros: extras ----- */
+.select-filtro-corto {
+    width: 190px;
+    margin-bottom: 0;
+}
+
+.btn-limpiar {
+    background: var(--surface-2);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+}
+.btn-limpiar:hover { border-color: var(--primary-color); }
+
+.contador-filtro {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: -4px 0 10px;
+}
+
+/* ----- Antigüedad del pendiente ----- */
+.badge-antiguedad {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 9px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+.antiguedad-verde    { background: var(--badge-verde-bg);    color: var(--badge-verde-text); }
+.antiguedad-amarilla { background: var(--badge-amarillo-bg); color: var(--badge-amarillo-text); }
+.antiguedad-roja     { background: var(--badge-rojo-bg);     color: var(--badge-rojo-text); }
+.antiguedad-neutra   { background: var(--chip-bg);           color: var(--text-muted); }
+
+@media (max-width: 640px) {
+    .select-filtro-corto { width: 100%; }
+}
+
+/* ----- Variación frente al mes anterior ----- */
+.kpi-delta {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    margin-top: 3px;
+    min-height: 12px;
+}
+.delta-neutro { color: var(--text-muted); }
+.delta-bien   { color: #16a34a; }
+.delta-mal    { color: #dc2626; }
+
+/* ----- Historial de cambios de un caso ----- */
+.lista-historial { display: flex; flex-direction: column; gap: 12px; }
+.item-historial {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 14px;
+    background: var(--surface-2);
+}
+.item-historial-cabecera {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+}
+.item-historial-cabecera strong { color: var(--title-color); }
+.item-historial ul { margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.6; }
+.cambio-antes   { color: var(--badge-rojo-text); text-decoration: line-through; }
+.cambio-despues { color: var(--badge-verde-text); font-weight: 600; }
+
+/* ----- Botón "Cerrar" en la lista de pendientes ----- */
+.btn-cerrar {
+    background: var(--badge-verde-bg);
+    color: var(--badge-verde-text);
+    border: 1px solid transparent;
+    font-weight: 700;
+    cursor: pointer;
+}
+.btn-cerrar:hover { border-color: var(--badge-verde-text); }
+.celda-acciones { white-space: nowrap; }

@@ -22,14 +22,29 @@
     </header>
 
     <h2 class="main-title">Seguimiento de Casos CCTV</h2>
+    <div class="fila-subtitulo">
+        <p class="subtitulo-modulo">¿Cuántos casos de seguridad recibimos, cuántos se cierran y quién los atiende?</p>
+        <span id="ultimaActualizacion" class="ultima-actualizacion"></span>
+    </div>
+
 
     <div class="tabs-cctv">
         <button type="button" id="tabResumen" class="tab-boton tab-activo" onclick="mostrarVista('resumen')">📊 Resumen</button>
         <button type="button" id="tabDetalle" class="tab-boton" onclick="mostrarVista('detalle')">📋 Detalle</button>
+        <button type="button" id="tabPendientes" class="tab-boton" onclick="mostrarVista('pendientes')">⏳ Pendientes <span id="contadorPendientesTab" class="contador-tab">0</span></button>
+        <button type="button" id="tabSeguimiento" class="tab-boton" onclick="mostrarVista('seguimiento')">🔁 Varias respuestas <span id="contadorSeguimientoTab" class="contador-tab">0</span></button>
         <div class="filtro-anio-container">
             <label for="filtroAnio">Año:</label>
             <select id="filtroAnio" class="form-control select-anio" onchange="aplicarFiltrosYRenderizar()">
                 <option value="todos">Todos los años</option>
+            </select>
+            <label for="filtroMes">Mes:</label>
+            <select id="filtroMes" class="form-control select-anio" onchange="aplicarFiltrosYRenderizar()">
+                <option value="todos">Todos los meses</option>
+                <option value="01">Enero</option><option value="02">Febrero</option><option value="03">Marzo</option>
+                <option value="04">Abril</option><option value="05">Mayo</option><option value="06">Junio</option>
+                <option value="07">Julio</option><option value="08">Agosto</option><option value="09">Septiembre</option>
+                <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
             </select>
         </div>
     </div>
@@ -37,52 +52,66 @@
     <!-- ===================== VISTA RESUMEN (solo gráficas) ===================== -->
     <div id="vistaResumen" class="vista-cctv">
 
-        <div class="kpi-container-4">
+        <div class="kpi-container-5">
             <div class="kpi-card">
                 <div class="kpi-icono kpi-icono--neutro">🗂️</div>
                 <div>
-                    <span class="kpi-label">Total de Casos</span>
+                    <span class="kpi-label">Total de Casos <span class="info-tip" title="Folios distintos solicitados en el período. Las ampliaciones de un mismo folio no se suman.">ⓘ</span></span>
                     <h4 id="kpiTotalCasos" class="kpi-valor kpi-valor--neutro">0</h4>
+                    <span id="deltaTotal" class="kpi-delta"></span>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-icono kpi-icono--azul">💰</div>
                 <div>
-                    <span class="kpi-label">Valorización Total</span>
+                    <span class="kpi-label">Valorización Total <span class="info-tip" title="Suma del valor de la mercadería de los casos del período (S/).">ⓘ</span></span>
                     <h4 id="kpiValorizacionTotal" class="kpi-valor kpi-valor--azul">S/ 0.00</h4>
+                    <span id="deltaValorizacion" class="kpi-delta"></span>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-icono kpi-icono--rojo">⚠️</div>
                 <div>
-                    <span class="kpi-label">Casos con Incidente</span>
+                    <span class="kpi-label">Casos con Incidente <span class="info-tip" title="Casos donde se confirmó un incidente de seguridad.">ⓘ</span></span>
                     <h4 id="kpiConIncidente" class="kpi-valor kpi-valor--rojo">0</h4>
+                    <span id="deltaIncidente" class="kpi-delta"></span>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-icono kpi-icono--verde">✅</div>
                 <div>
-                    <span class="kpi-label">Casos sin Incidente</span>
+                    <span class="kpi-label">Casos sin Incidente <span class="info-tip" title="Casos revisados en los que no se encontró ningún incidente.">ⓘ</span></span>
                     <h4 id="kpiSinIncidente" class="kpi-valor kpi-valor--verde">0</h4>
+                    <span id="deltaSinIncidente" class="kpi-delta"></span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icono kpi-icono--amarillo">🟡</div>
+                <div>
+                    <span class="kpi-label">Casos Pendientes <span class="info-tip" title="Casos respondidos que siguen abiertos. Cada uno tiene un motivo registrado en la pestaña Pendientes.">ⓘ</span></span>
+                    <h4 id="kpiPendientes" class="kpi-valor kpi-valor--amarillo">0</h4>
+                    <span id="deltaPendientes" class="kpi-delta"></span>
                 </div>
             </div>
         </div>
 
+        <p id="notaConteoResumen" class="nota-conteo"></p>
+
         <div class="graficas-grid">
             <div class="grafica-card">
-                <h3 class="titulo-grafica">Casos por Mes</h3>
+                <h3 id="tituloGrafMes" class="titulo-grafica">Casos recibidos por mes</h3>
                 <div class="grafica-canvas-wrap"><canvas id="graficoCasosPorMes"></canvas></div>
             </div>
             <div class="grafica-card">
-                <h3 class="titulo-grafica">Costos por Mes (S/)</h3>
+                <h3 id="tituloGrafCosto" class="titulo-grafica">Valorización de mercadería por mes (S/)</h3>
                 <div class="grafica-canvas-wrap"><canvas id="graficoCostosPorMes"></canvas></div>
             </div>
             <div class="grafica-card">
-                <h3 class="titulo-grafica">Casos por Tipo de Resolución</h3>
-                <div class="grafica-canvas-wrap"><canvas id="graficoResolucion"></canvas></div>
+                <h3 class="titulo-grafica">Estado de los casos: cerrados vs pendientes</h3>
+                <div class="grafica-canvas-wrap"><canvas id="graficoEstadoCaso"></canvas></div>
             </div>
             <div class="grafica-card">
-                <h3 class="titulo-grafica">Casos por Operador</h3>
+                <h3 class="titulo-grafica">Casos atendidos por operador <span class="info-tip" title="Se asigna cada folio al operador de su primera respuesta.">ⓘ</span></h3>
                 <div class="grafica-canvas-wrap"><canvas id="graficoOperador"></canvas></div>
             </div>
         </div>
@@ -99,7 +128,8 @@
                 <div class="grid-formulario">
                     <div class="form-group">
                         <label>N° de Folio</label>
-                        <input type="text" id="folio" class="form-control" placeholder="Ej: 123456" required>
+                        <input type="text" id="folio" class="form-control" placeholder="Ej: 123456" required oninput="actualizarAvisoFolio()">
+                        <span id="avisoFolioRepetido" class="aviso-folio-repetido" style="display:none"></span>
                     </div>
                     <div class="form-group">
                         <label>Solicitante (quién envía la solicitud)</label>
@@ -137,6 +167,17 @@
                         <label>Operador que Responde</label>
                         <select id="operador" class="form-control" required></select>
                     </div>
+                    <div class="form-group form-group-checkbox">
+                        <label class="label-checkbox" for="casoCerrado">
+                            <input type="checkbox" id="casoCerrado" onchange="alCambiarCerrado()">
+                            Caso Cerrado
+                        </label>
+                        <span class="texto-ayuda-campo">Marca esta casilla solo cuando el caso ya quedó resuelto. Sin marcar = Pendiente.</span>
+                    </div>
+                    <div class="form-group campo-ancho" id="grupoMotivoPendiente">
+                        <label for="motivoPendiente">Motivo por el que queda Pendiente</label>
+                        <input type="text" id="motivoPendiente" class="form-control" maxlength="300" placeholder="Ej: Se requiere más información / El producto no ha sido identificado">
+                    </div>
                     <div class="form-group campo-ancho">
                         <label>Resolución Final (link de OneDrive)</label>
                         <input type="url" id="resolucionFinal" class="form-control" placeholder="https://onedrive.live.com/...">
@@ -148,10 +189,22 @@
         </div>
 
         <div class="barra-filtros-detalle">
-            <input type="text" id="filtroTextoDetalle" class="form-control input-filtro-texto" placeholder="Buscar por folio, mercadería o solicitante..." oninput="renderizarTablaDetalleFiltrada()">
+            <input type="text" id="filtroTextoDetalle" class="form-control input-filtro-texto" placeholder="Buscar por folio, mercadería o solicitante..." oninput="buscarDetalle()">
             <select id="filtroResolucionDetalle" class="form-control select-filtro" onchange="renderizarTablaDetalleFiltrada()"></select>
             <select id="filtroOperadorDetalle" class="form-control select-filtro" onchange="renderizarTablaDetalleFiltrada()"></select>
+            <select id="filtroEstadoDetalle" class="form-control select-filtro-corto" onchange="renderizarTablaDetalleFiltrada()">
+                <option value="todos">Todos los estados</option>
+                <option value="cerrado">🟢 Cerrados</option>
+                <option value="pendiente">🟡 Pendientes</option>
+            </select>
+            <select id="filtroTipoDetalle" class="form-control select-filtro-corto" onchange="renderizarTablaDetalleFiltrada()">
+                <option value="todos">Todas las respuestas</option>
+                <option value="cuentan">✔ Solo las que cuentan</option>
+                <option value="ampliaciones">↪ Solo ampliaciones</option>
+            </select>
+            <button type="button" class="btn-sm btn-limpiar" onclick="limpiarFiltrosDetalle()">✖ Limpiar</button>
             <button type="button" class="btn-sm btn-edit" onclick="exportarExcelCCTV()">⬇️ Exportar a Excel</button>
+            <button type="button" class="btn-sm btn-edit" onclick="respaldoCCTV(this)" title="Descarga todos los casos y su historial de cambios, sin filtros">💾 Respaldo completo</button>
         </div>
 
         <div class="table-scroll-container">
@@ -167,6 +220,7 @@
                         <th>Resolución</th>
                         <th>Detalle</th>
                         <th>Incidente</th>
+                        <th>Estado</th>
                         <th>Resumen</th>
                         <th>Operador</th>
                         <th>Solicitante</th>
@@ -174,9 +228,68 @@
                     </tr>
                 </thead>
                 <tbody id="tbodyCasos">
-                    <tr><td colspan="13" class="empty-state">Cargando casos…</td></tr>
+                    <tr><td colspan="14" class="empty-state">Cargando casos…</td></tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- ===================== VISTA PENDIENTES (seguimiento de casos no cerrados) ===================== -->
+    <div id="vistaPendientes" class="vista-cctv vista-oculta">
+        <p class="texto-ayuda-validacion">
+            Casos que el operador respondió pero dejó sin cerrar. Cada uno indica el motivo del pendiente.
+            Cuando el caso se resuelva, edítalo y marca "Caso Cerrado": saldrá de esta lista automáticamente.
+        </p>
+        <div class="barra-filtros-detalle">
+            <input type="text" id="filtroTextoPendientes" class="form-control input-filtro-texto" placeholder="Buscar por folio, mercadería, solicitante o motivo..." oninput="buscarPendientes()">
+            <select id="filtroOperadorPendientes" class="form-control select-filtro" onchange="renderizarPendientes()"></select>
+            <button type="button" class="btn-sm btn-limpiar" onclick="limpiarFiltrosPendientes()">✖ Limpiar</button>
+        </div>
+        <p id="contadorFiltroPendientes" class="contador-filtro"></p>
+        <div class="tabla-responsiva">
+            <table class="tabla-duplicados">
+                <thead>
+                    <tr>
+                        <th>Folio</th>
+                        <th>Descripción</th>
+                        <th>Solicitante</th>
+                        <th>Operador</th>
+                        <th>Fecha Solicitud</th>
+                        <th>Fecha Respuesta</th>
+                        <th>Antigüedad</th>
+                        <th>Motivo del Pendiente</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyPendientes"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===================== VISTA VARIAS RESPUESTAS (un folio atendido más de una vez) ===================== -->
+    <div id="vistaSeguimiento" class="vista-cctv vista-oculta">
+        <p class="texto-ayuda-validacion">
+            Folios que tienen más de una respuesta (por ejemplo: una nueva solicitud de mayor calidad de imagen u otra vista de cámara).
+            En las estadísticas <strong>solo cuenta la primera respuesta</strong> de cada folio (con su operador); las siguientes
+            quedan registradas aquí como ampliaciones, cada una con su propio operador y su evidencia.
+        </p>
+        <div class="barra-filtros-detalle">
+            <input type="text" id="filtroTextoSeguimiento" class="form-control input-filtro-texto" placeholder="Buscar por folio, mercadería o solicitante..." oninput="buscarSeguimiento()">
+            <select id="filtroOperadorSeguimiento" class="form-control select-filtro" onchange="renderizarSeguimiento()"></select>
+            <button type="button" class="btn-sm btn-limpiar" onclick="limpiarFiltrosSeguimiento()">✖ Limpiar</button>
+        </div>
+        <p id="contadorFiltroSeguimiento" class="contador-filtro"></p>
+        <div id="contenedorSeguimiento"></div>
+    </div>
+
+    <!-- MODAL — Historial de cambios de un caso -->
+    <div id="modalHistorialCaso" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Historial del folio <span id="folioHistorialCaso" class="codigo"></span></h3>
+                <span class="close-modal" role="button" tabindex="0" aria-label="Cerrar" onclick="cerrarHistorialCaso()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cerrarHistorialCaso()}">&times;</span>
+            </div>
+            <div class="modal-body" id="cuerpoHistorialCaso"></div>
         </div>
     </div>
 
@@ -192,12 +305,16 @@
     </div>
 
     <script src="errores.js"></script>
+    <script src="negocio.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
         let casosCache = [];
+        let gruposFolio = [];          // un grupo por folio: registros ordenados, principal y último
+        let casosUnicosCache = [];     // un caso por folio (el principal) — base de las estadísticas
+        let infoFolioPorId = {};       // id de registro -> { orden, total }
         let ultimaListaFiltrada = [];
         let charts = {};
 
@@ -294,9 +411,10 @@
                 '<option value="todas">Todas las resoluciones</option>' +
                 Object.keys(CATEGORIAS_RESOLUCION).map(c => `<option value="${c}">${c}</option>`).join('');
 
-            document.getElementById('filtroOperadorDetalle').innerHTML =
-                '<option value="todos">Todos los operadores</option>' +
+            const opcionesOperador = '<option value="todos">Todos los operadores</option>' +
                 OPERADORES_CCTV.map(o => `<option value="${o}">${o}</option>`).join('');
+            ['filtroOperadorDetalle', 'filtroOperadorPendientes', 'filtroOperadorSeguimiento']
+                .forEach(id => { document.getElementById(id).innerHTML = opcionesOperador; });
         }
 
         function actualizarDetalleOptions() {
@@ -326,8 +444,30 @@
             }
 
             const editId = document.getElementById('editId').value;
+            const folioValor = document.getElementById('folio').value.trim();
+
+            const estaCerrado = document.getElementById('casoCerrado').checked;
+            const motivoValor = document.getElementById('motivoPendiente').value.trim();
+            if (!estaCerrado && !motivoValor) {
+                mostrarAviso('Si el caso no está cerrado, indica el motivo por el que queda pendiente.', 'advertencia');
+                document.getElementById('motivoPendiente').focus();
+                return;
+            }
+
+            // Folio repetido: se permite, pero como ampliación (no se cuenta de nuevo).
+            // Se confirma solo al crear, para que un error de tipeo no pase desapercibido.
+            const previos = registrosDeFolio(folioValor, editId ? parseInt(editId) : null);
+            if (!editId && previos.length > 0) {
+                const primero = ordenarRegistrosFolio(previos)[0];
+                const ok = confirm(
+                    `El folio ${folioValor} ya tiene ${previos.length} respuesta(s) (la primera: ${primero.operador}, ${formatearFecha(primero.fecha_solicitud)}).\n\n` +
+                    `Se cargará como una AMPLIACIÓN del mismo caso y NO se contará de nuevo en las estadísticas por operador.\n\n¿Continuar?`
+                );
+                if (!ok) return;
+            }
+
             const registro = {
-                folio: document.getElementById('folio').value.trim(),
+                folio: folioValor,
                 descripcion_mercaderia: document.getElementById('descripcionMercaderia').value.trim(),
                 precio_mercaderia: parseFloat(document.getElementById('precioMercaderia').value) || 0,
                 fecha_solicitud: document.getElementById('fechaSolicitud').value,
@@ -337,7 +477,9 @@
                 incidente_seguridad: document.getElementById('incidenteSeguridad').value,
                 resolucion_final: resolucionFinalValor,
                 operador: document.getElementById('operador').value,
-                solicitante: document.getElementById('solicitante').value
+                solicitante: document.getElementById('solicitante').value,
+                cerrado: estaCerrado,
+                motivo_pendiente: estaCerrado ? null : motivoValor
             };
 
             const { data: { user } } = await supabaseClient.auth.getUser();
@@ -352,6 +494,7 @@
             btn.textContent = textoOriginalBtn;
             if (!ok) return;
 
+            try { localStorage.setItem('previcheck-ultimo-operador', registro.operador); } catch (e) { /* sin almacenamiento: no pasa nada */ }
             mostrarAviso(editId ? 'Caso actualizado correctamente.' : 'Caso registrado correctamente.', 'exito');
             resetearFormularioCaso();
             await cargarYRenderizarTodo();
@@ -375,6 +518,9 @@
             document.getElementById('resolucionFinal').value = c.resolucion_final || '';
             document.getElementById('operador').value = c.operador;
             document.getElementById('solicitante').value = c.solicitante;
+            document.getElementById('casoCerrado').checked = !!c.cerrado;
+            document.getElementById('motivoPendiente').value = c.motivo_pendiente || '';
+            actualizarCampoMotivo();
 
             const btn = document.getElementById('btnSubmitCaso');
             btn.textContent = 'Actualizar Caso';
@@ -390,11 +536,84 @@
             await cargarYRenderizarTodo();
         }
 
+        /* El motivo solo aplica (y es obligatorio) cuando el caso NO está cerrado */
+        function alCambiarCerrado() {
+            actualizarCampoMotivo();
+            const fechaResp = document.getElementById('fechaRespuesta');
+            if (document.getElementById('casoCerrado').checked && !fechaResp.value) fechaResp.value = fechaHoyPeru();
+        }
+
+        function actualizarCampoMotivo() {
+            const cerrado = document.getElementById('casoCerrado').checked;
+            document.getElementById('grupoMotivoPendiente').style.display = cerrado ? 'none' : '';
+        }
+
+        /* ---------- Historial de cambios de un caso ---------- */
+        const ETIQUETAS_CAMPO = {
+            folio: 'Folio', descripcion_mercaderia: 'Descripción', precio_mercaderia: 'Precio', fecha_solicitud: 'Fecha de solicitud',
+            fecha_respuesta: 'Fecha de respuesta', resolucion: 'Resolución', detalle_resolucion: 'Detalle de resolución',
+            incidente_seguridad: 'Incidente', resolucion_final: 'Link de evidencia', operador: 'Operador', solicitante: 'Solicitante',
+            cerrado: 'Estado', motivo_pendiente: 'Motivo del pendiente'
+        };
+
+        function formatearValorHistorial(campo, valor) {
+            if (valor === null || valor === undefined || valor === '') return '—';
+            if (campo === 'cerrado') return valor ? 'Cerrado' : 'Pendiente';
+            if (campo.startsWith('fecha_')) return formatearFecha(valor);
+            return String(valor);
+        }
+
+        function escaparHtml(texto) {
+            return String(texto).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+        }
+
+        async function verHistorialCaso(id) {
+            const caso = casosCache.find(x => x.id === id);
+            document.getElementById('folioHistorialCaso').textContent = caso ? caso.folio : '';
+            const cuerpo = document.getElementById('cuerpoHistorialCaso');
+            cuerpo.innerHTML = '<p class="empty-state">Cargando historial…</p>';
+            document.getElementById('modalHistorialCaso').style.display = 'flex';
+
+            const historial = await listarHistorialCasoCCTV(id);
+            if (historial === null) { cuerpo.innerHTML = '<p class="empty-state">No se pudo cargar el historial.</p>'; return; }
+            if (historial.length === 0) {
+                cuerpo.innerHTML = '<p class="empty-state">Este caso no tiene cambios registrados (se cargó antes de activar el historial).</p>';
+                return;
+            }
+            cuerpo.innerHTML = '<div class="lista-historial">' + historial.map(h => {
+                let detalle = '';
+                if (h.accion === 'editado' && h.cambios) {
+                    detalle = '<ul>' + Object.entries(h.cambios).map(([campo, v]) =>
+                        `<li>${escaparHtml(ETIQUETAS_CAMPO[campo] || campo)}: <span class="cambio-antes">${escaparHtml(formatearValorHistorial(campo, v.antes))}</span> → <span class="cambio-despues">${escaparHtml(formatearValorHistorial(campo, v.despues))}</span></li>`
+                    ).join('') + '</ul>';
+                }
+                const titulo = { creado: '➕ Caso creado', editado: '✏️ Caso editado', eliminado: '🗑️ Caso eliminado' }[h.accion] || h.accion;
+                return `
+                    <div class="item-historial">
+                        <div class="item-historial-cabecera">
+                            <strong>${titulo}</strong>
+                            <span>${escaparHtml(h.usuario_nombre || 'Usuario desconocido')} · ${formatearFechaHora(h.registrado_en)}</span>
+                        </div>
+                        ${detalle}
+                    </div>`;
+            }).join('') + '</div>';
+        }
+
+        function cerrarHistorialCaso() {
+            document.getElementById('modalHistorialCaso').style.display = 'none';
+        }
+
         function resetearFormularioCaso() {
             document.getElementById('formCaso').reset();
             document.getElementById('editId').value = '';
             document.getElementById('fechaSolicitud').value = fechaHoyPeru();
             actualizarDetalleOptions();
+            actualizarCampoMotivo();
+            // Atajo: vuelve a proponer el último operador usado en este equipo
+            try {
+                const ultimo = localStorage.getItem('previcheck-ultimo-operador');
+                if (ultimo && OPERADORES_CCTV.includes(ultimo)) document.getElementById('operador').value = ultimo;
+            } catch (e) { /* sin almacenamiento: no pasa nada */ }
             const btn = document.getElementById('btnSubmitCaso');
             btn.textContent = 'Registrar Caso';
             btn.classList.remove('btn-mode-update');
@@ -437,14 +656,35 @@
         function mostrarVista(vista) {
             document.getElementById('vistaResumen').classList.toggle('vista-oculta', vista !== 'resumen');
             document.getElementById('vistaDetalle').classList.toggle('vista-oculta', vista !== 'detalle');
+            document.getElementById('vistaPendientes').classList.toggle('vista-oculta', vista !== 'pendientes');
+            document.getElementById('vistaSeguimiento').classList.toggle('vista-oculta', vista !== 'seguimiento');
             document.getElementById('tabResumen').classList.toggle('tab-activo', vista === 'resumen');
             document.getElementById('tabDetalle').classList.toggle('tab-activo', vista === 'detalle');
+            document.getElementById('tabPendientes').classList.toggle('tab-activo', vista === 'pendientes');
+            document.getElementById('tabSeguimiento').classList.toggle('tab-activo', vista === 'seguimiento');
+            if (vista === 'seguimiento') renderizarSeguimiento();
         }
 
         /* ---------- Filtros y agregaciones ---------- */
         function obtenerAniosDisponibles(lista) {
             const anios = new Set(lista.map(c => (c.fecha_solicitud || '').slice(0, 4)).filter(Boolean));
             return Array.from(anios).sort().reverse();
+        }
+
+        /* ---------- Período (año + mes) ---------- */
+        const NOMBRES_MES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+        function leerPeriodo() {
+            return { anio: document.getElementById('filtroAnio').value, mes: document.getElementById('filtroMes').value };
+        }
+
+        function filtrarPorPeriodo(lista, anio, mes) {
+            return lista.filter(c => {
+                const f = c.fecha_solicitud || '';
+                if (anio !== 'todos' && f.slice(0, 4) !== anio) return false;
+                if (mes !== 'todos' && f.slice(5, 7) !== mes) return false;
+                return true;
+            });
         }
 
         function filtrarPorAnio(lista, anio) {
@@ -456,7 +696,15 @@
             const totalCasos = lista.length;
             const totalValorizacion = lista.reduce((acc, c) => acc + (Number(c.precio_mercaderia) || 0), 0);
             const casosConIncidente = lista.filter(c => c.incidente_seguridad && c.incidente_seguridad !== 'Sin incidente').length;
-            return { totalCasos, totalValorizacion, casosConIncidente, casosSinIncidente: totalCasos - casosConIncidente };
+            const casosPendientes = lista.filter(c => !c.cerrado).length;
+
+            return {
+                totalCasos,
+                totalValorizacion,
+                casosConIncidente,
+                casosSinIncidente: totalCasos - casosConIncidente,
+                casosPendientes
+            };
         }
 
         function agruparPorMes(lista, campoValor) {
@@ -467,7 +715,7 @@
                 const mes = parseInt(c.fecha_solicitud.slice(5, 7), 10) - 1;
                 if (mes >= 0 && mes < 12) valores[mes] += campoValor ? (Number(c[campoValor]) || 0) : 1;
             });
-            return { meses, valores };
+            return { meses, valores: valores.map(redondear2) };
         }
 
         function agruparPorResolucion(lista) {
@@ -475,6 +723,248 @@
             Object.keys(CATEGORIAS_RESOLUCION).forEach(cat => conteo[cat] = 0);
             lista.forEach(c => { conteo[c.resolucion] = (conteo[c.resolucion] || 0) + 1; });
             return conteo;
+        }
+
+        function agruparPorEstadoCierre(lista) {
+            const cerrados = lista.filter(c => c.cerrado).length;
+            return { Cerrados: cerrados, Pendientes: lista.length - cerrados };
+        }
+
+        /* ---------- Folios con varias respuestas (reglas en negocio.js) ---------- */
+        function registrosDeFolio(folio, excluirId) {
+            const clave = normalizarFolio(folio);
+            if (!clave) return [];
+            return casosCache.filter(c => c.id !== excluirId && normalizarFolio(c.folio) === clave);
+        }
+
+        function recalcularGruposFolio() {
+            gruposFolio = construirGruposFolio(casosCache);
+            infoFolioPorId = {};
+            gruposFolio.forEach(g => g.registros.forEach((r, i) => {
+                infoFolioPorId[r.id] = { orden: i + 1, total: g.registros.length };
+            }));
+            casosUnicosCache = gruposFolio.map(g => ({
+                ...g.principal,
+                cerrado: g.ultimo.cerrado,
+                motivo_pendiente: g.ultimo.motivo_pendiente
+            }));
+        }
+
+        function etiquetaRespuesta(id) {
+            const info = infoFolioPorId[id];
+            if (!info || info.total < 2) return '';
+            return info.orden === 1
+                ? `<span class="badge-principal" title="Es la respuesta que se cuenta en las estadísticas">✔ Cuenta · 1/${info.total}</span>`
+                : `<span class="badge-ampliacion" title="Ampliación del mismo caso: no se cuenta de nuevo">↪ Ampliación ${info.orden}/${info.total}</span>`;
+        }
+
+        function actualizarAvisoFolio() {
+            const aviso = document.getElementById('avisoFolioRepetido');
+            const editId = document.getElementById('editId').value;
+            const previos = registrosDeFolio(document.getElementById('folio').value, editId ? parseInt(editId) : null);
+            if (previos.length === 0) { aviso.style.display = 'none'; return; }
+            const primero = ordenarRegistrosFolio(previos)[0];
+            aviso.textContent = `ℹ️ Este folio ya tiene ${previos.length} respuesta(s) (primera: ${primero.operador}, ${formatearFecha(primero.fecha_solicitud)}). ` +
+                (editId ? 'Este registro se mantiene como parte del mismo caso.' : 'Se cargará como ampliación y no se contará de nuevo.');
+            aviso.style.display = 'block';
+        }
+
+        /* Pre-llena el formulario con los datos del caso para cargar otra respuesta */
+        function agregarRespuesta(folio) {
+            const g = gruposFolio.find(x => normalizarFolio(x.folio) === normalizarFolio(folio));
+            if (!g) return;
+            mostrarVista('detalle');
+            resetearFormularioCaso();
+            document.getElementById('folio').value = g.principal.folio;
+            document.getElementById('solicitante').value = g.principal.solicitante;
+            document.getElementById('descripcionMercaderia').value = g.principal.descripcion_mercaderia;
+            document.getElementById('precioMercaderia').value = g.principal.precio_mercaderia;
+            actualizarAvisoFolio();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('operador').focus();
+        }
+
+        /* Grupos de folio cuyo caso empezó en el período elegido arriba (misma regla que el Resumen) */
+        function gruposDelPeriodo() {
+            const { anio, mes } = leerPeriodo();
+            return gruposFolio.filter(g => filtrarPorPeriodo([g.principal], anio, mes).length > 0);
+        }
+
+        function textoContador(mostrados, total, singular, plural) {
+            if (mostrados === total) return `${total} ${total === 1 ? singular : plural}`;
+            return `Mostrando ${mostrados} de ${total} ${plural}`;
+        }
+
+        const buscarDetalle = conPausa(() => renderizarTablaDetalleFiltrada());
+        const buscarPendientes = conPausa(() => renderizarPendientes());
+        const buscarSeguimiento = conPausa(() => renderizarSeguimiento());
+
+        function limpiarFiltrosDetalle() {
+            document.getElementById('filtroTextoDetalle').value = '';
+            ['filtroResolucionDetalle', 'filtroOperadorDetalle', 'filtroEstadoDetalle', 'filtroTipoDetalle']
+                .forEach(id => { document.getElementById(id).selectedIndex = 0; });
+            renderizarTablaDetalleFiltrada();
+        }
+
+        function limpiarFiltrosPendientes() {
+            document.getElementById('filtroTextoPendientes').value = '';
+            document.getElementById('filtroOperadorPendientes').selectedIndex = 0;
+            renderizarPendientes();
+        }
+
+        function limpiarFiltrosSeguimiento() {
+            document.getElementById('filtroTextoSeguimiento').value = '';
+            document.getElementById('filtroOperadorSeguimiento').selectedIndex = 0;
+            renderizarSeguimiento();
+        }
+
+        /* Cierra el caso directamente desde la lista de pendientes.
+           Cierra todas las respuestas aún abiertas de ese folio (es el mismo caso). */
+        async function cerrarCasoPendiente(id) {
+            const c = casosCache.find(x => x.id === id);
+            if (!c) { mostrarAviso('Ese caso ya no existe. Actualizando…', 'advertencia'); cargarYRenderizarTodo(); return; }
+            const grupo = gruposFolio.find(g => normalizarFolio(g.folio) === normalizarFolio(c.folio));
+            const abiertas = (grupo ? grupo.registros : [c]).filter(r => !r.cerrado);
+            const aviso = abiertas.length > 1 ? `\n\nSe cerrarán sus ${abiertas.length} respuestas abiertas.` : '';
+            if (!confirm(`¿Marcar como CERRADO el folio ${c.folio}?${aviso}`)) return;
+            if (!estaEnLinea()) { mostrarAviso('No hay conexión a internet. Espera a que vuelva la señal.', 'error'); return; }
+
+            for (const r of abiertas) {
+                const campos = { cerrado: true, motivo_pendiente: null };
+                if (!r.fecha_respuesta) campos.fecha_respuesta = fechaHoyPeru();
+                const ok = await guardarCasoCCTVRemoto(campos, r.id);
+                if (!ok) { await cargarYRenderizarTodo(); return; }
+            }
+            mostrarAviso(`Folio ${c.folio} cerrado.`, 'exito');
+            await cargarYRenderizarTodo();
+        }
+
+        function claseAntiguedad(dias) {
+            if (dias === null) return 'antiguedad-neutra';
+            if (dias >= 7) return 'antiguedad-roja';
+            if (dias >= 3) return 'antiguedad-amarilla';
+            return 'antiguedad-verde';
+        }
+
+        function renderizarPendientes() {
+            // Un caso está pendiente si su última respuesta no está cerrada
+            const base = gruposDelPeriodo().filter(g => !g.ultimo.cerrado);
+            document.getElementById('contadorPendientesTab').textContent = base.length;
+
+            const texto = normalizarBusqueda(document.getElementById('filtroTextoPendientes').value);
+            const operador = document.getElementById('filtroOperadorPendientes').value;
+            const pendientes = base.filter(g => {
+                const c = g.ultimo;
+                const coincideTexto = !texto || normalizarBusqueda(
+                    [c.folio, g.principal.descripcion_mercaderia, c.solicitante, c.motivo_pendiente].join(' ')).includes(texto);
+                const coincideOperador = operador === 'todos' || c.operador === operador;
+                return coincideTexto && coincideOperador;
+            });
+            document.getElementById('contadorFiltroPendientes').textContent =
+                textoContador(pendientes.length, base.length, 'caso pendiente', 'casos pendientes');
+
+            const tbody = document.getElementById('tbodyPendientes');
+            if (pendientes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No hay casos pendientes con esos filtros. 👍</td></tr>';
+                return;
+            }
+            const permiteEdicion = !esLector();
+            // Los más antiguos primero: son los que más seguimiento necesitan
+            pendientes.sort((a, b) => (antiguedadPendiente(b) || 0) - (antiguedadPendiente(a) || 0));
+            tbody.innerHTML = pendientes.map(g => {
+                const c = g.ultimo;
+                const dias = antiguedadPendiente(g);
+                const multi = g.registros.length > 1 ? ` <span class="badge-ampliacion" title="Este folio tiene varias respuestas">${g.registros.length} respuestas</span>` : '';
+                return `
+                <tr>
+                    <td><span class="codigo">${c.folio}</span>${multi}</td>
+                    <td>${g.principal.descripcion_mercaderia}</td>
+                    <td>${c.solicitante}</td>
+                    <td>${c.operador}</td>
+                    <td>${formatearFecha(c.fecha_solicitud)}</td>
+                    <td>${formatearFecha(c.fecha_respuesta) || '—'}</td>
+                    <td><span class="badge-antiguedad ${claseAntiguedad(dias)}" title="Días desde la última respuesta">${dias === null ? '—' : dias + (dias === 1 ? ' día' : ' días')}</span></td>
+                    <td>${c.motivo_pendiente || '<span class="texto-solo-lectura">Sin motivo registrado</span>'}</td>
+                    <td class="celda-acciones">${permiteEdicion ? `
+                        <button class="btn-sm btn-cerrar" onclick="cerrarCasoPendiente(${c.id})" title="Marcar este caso como cerrado" aria-label="Marcar como cerrado">✔ Cerrar</button>
+                        <button class="btn-sm btn-edit" onclick="editarCaso(${c.id})" aria-label="Editar caso">✏️</button>` : '<span class="texto-solo-lectura">Solo lectura</span>'}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderizarSeguimiento() {
+            const contenedor = document.getElementById('contenedorSeguimiento');
+            const base = gruposDelPeriodo().filter(g => g.registros.length > 1);
+            document.getElementById('contadorSeguimientoTab').textContent = base.length;
+
+            const texto = normalizarBusqueda(document.getElementById('filtroTextoSeguimiento').value);
+            const operador = document.getElementById('filtroOperadorSeguimiento').value;
+            const multiples = base.filter(g => {
+                const coincideTexto = !texto || normalizarBusqueda(
+                    g.registros.map(c => [c.folio, c.descripcion_mercaderia, c.solicitante].join(' ')).join(' ')).includes(texto);
+                const coincideOperador = operador === 'todos' || g.registros.some(c => c.operador === operador);
+                return coincideTexto && coincideOperador;
+            });
+            document.getElementById('contadorFiltroSeguimiento').textContent =
+                textoContador(multiples.length, base.length, 'folio con varias respuestas', 'folios con varias respuestas');
+
+            if (multiples.length === 0) {
+                contenedor.innerHTML = '<p class="empty-state">Ningún folio con varias respuestas coincide con esos filtros.</p>';
+                return;
+            }
+
+            const permiteEdicion = !esLector();
+            multiples.sort((a, b) => b.registros.length - a.registros.length ||
+                (b.ultimo.fecha_solicitud || '').localeCompare(a.ultimo.fecha_solicitud || ''));
+
+            contenedor.innerHTML = multiples.map(g => `
+                <div class="grupo-duplicado">
+                    <div class="grupo-cabecera">
+                        <h4 class="grupo-duplicado-titulo">Folio <span class="codigo">${g.folio}</span> — ${g.registros.length} respuestas
+                            <span class="grupo-cuenta">cuenta para: ${g.principal.operador} (${formatearFecha(g.principal.fecha_solicitud)})</span>
+                        </h4>
+                        ${permiteEdicion ? `<button type="button" class="btn-sm btn-edit" onclick="agregarRespuesta('${g.folio.replace(/'/g, "\\'")}')">➕ Agregar respuesta</button>` : ''}
+                    </div>
+                    <div class="tabla-responsiva">
+                        <table class="tabla-duplicados">
+                            <thead>
+                                <tr>
+                                    <th>Respuesta</th>
+                                    <th>Fecha Solicitud</th>
+                                    <th>Fecha Respuesta</th>
+                                    <th>Operador</th>
+                                    <th>Descripción</th>
+                                    <th>Precio</th>
+                                    <th>Solicitante</th>
+                                    <th>Resolución</th>
+                                    <th>Estado</th>
+                                    <th>Evidencia</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${g.registros.map(c => `
+                                    <tr>
+                                        <td>${etiquetaRespuesta(c.id)}</td>
+                                        <td>${formatearFecha(c.fecha_solicitud)}</td>
+                                        <td>${formatearFecha(c.fecha_respuesta) || '—'}</td>
+                                        <td>${c.operador}</td>
+                                        <td>${c.descripcion_mercaderia}</td>
+                                        <td>S/ ${Number(c.precio_mercaderia).toFixed(2)}</td>
+                                        <td>${c.solicitante}</td>
+                                        <td>${c.resolucion}</td>
+                                        <td>${c.cerrado ? '<span class="badge-cerrado">🟢 Cerrado</span>' : '<span class="badge-pendiente">🟡 Pendiente</span>'}</td>
+                                        <td>${c.resolucion_final && esUrlValida(c.resolucion_final)
+                                            ? `<a class="enlace-evidencia" href="${c.resolucion_final.replace(/"/g, '%22')}" target="_blank" rel="noopener noreferrer">📂 Abrir</a>`
+                                            : '<span class="texto-solo-lectura">Sin link</span>'}</td>
+                                        <td>${permiteEdicion ? `<button class="btn-sm btn-edit" onclick="editarCaso(${c.id})" aria-label="Editar respuesta">✏️</button>` : ''}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function agruparPorOperador(lista) {
@@ -490,19 +980,33 @@
             charts = {};
         }
 
-        function renderizarGraficas(lista) {
+        Chart.register(PLUGIN_VALORES_EN_BARRAS, PLUGIN_TEXTO_CENTRO);
+
+        function renderizarGraficas(listaPeriodo, listaAnio, stats) {
             destruirCharts();
 
-            const { meses, valores: casosPorMes } = agruparPorMes(lista, null);
-            const { valores: costosPorMes } = agruparPorMes(lista, 'precio_mercaderia');
-            const porResolucion = agruparPorResolucion(lista);
-            const porOperador = agruparPorOperador(lista);
+            const { anio, mes } = leerPeriodo();
+            const etiquetaAnio = anio === 'todos' ? 'todos los años' : anio;
+            document.getElementById('tituloGrafMes').textContent = `Casos recibidos por mes — ${etiquetaAnio}`;
+            document.getElementById('tituloGrafCosto').textContent = `Valorización de mercadería por mes (S/) — ${etiquetaAnio}`;
+
+            // Las gráficas "por mes" muestran el año completo; las demás respetan el mes elegido
+            const { meses, valores: casosPorMes } = agruparPorMes(listaAnio, null);
+            const { valores: costosPorMes } = agruparPorMes(listaAnio, 'precio_mercaderia');
+            const porEstadoCierre = agruparPorEstadoCierre(listaPeriodo);
+            const porOperador = agruparPorOperador(listaPeriodo);
+            const tasa = listaPeriodo.length ? Math.round(porEstadoCierre.Cerrados / listaPeriodo.length * 100) : 0;
 
             // 1. Casos por Mes — BARRAS
             charts.casosPorMes = new Chart(document.getElementById('graficoCasosPorMes'), {
                 type: 'bar',
                 data: { labels: meses, datasets: [{ label: 'Casos', data: casosPorMes, backgroundColor: '#1f8bc9', borderRadius: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    layout: { padding: { top: 18 } },
+                    plugins: { legend: { display: false }, valoresEnBarras: { activo: true } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
             });
 
             // 2. Costos por Mes — LÍNEA
@@ -521,21 +1025,31 @@
                         pointRadius: 4
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => ' S/ ' + formatearNumero(ctx.parsed.y) } }
+                    },
+                    scales: { y: { beginAtZero: true, ticks: { callback: v => 'S/ ' + formatearNumero(v, 0) } } }
+                }
             });
 
-            // 3. Tipo de Resolución — CIRCULAR (pie)
-            const labelsResolucion = Object.keys(porResolucion);
-            charts.resolucion = new Chart(document.getElementById('graficoResolucion'), {
-                type: 'pie',
+            // 3. Cerrados vs Pendientes — DONA con la tasa de cierre al centro
+            charts.estadoCaso = new Chart(document.getElementById('graficoEstadoCaso'), {
+                type: 'doughnut',
                 data: {
-                    labels: labelsResolucion,
+                    labels: [`Cerrados (${porEstadoCierre.Cerrados})`, `Pendientes (${porEstadoCierre.Pendientes})`],
                     datasets: [{
-                        data: Object.values(porResolucion),
-                        backgroundColor: labelsResolucion.map(l => COLORES_RESOLUCION[l] || '#94a3b8')
+                        data: [porEstadoCierre.Cerrados, porEstadoCierre.Pendientes],
+                        backgroundColor: ['#16a34a', '#f59e0b'],
+                        borderWidth: 0
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '64%',
+                    plugins: { legend: { position: 'right' }, tooltip: TOOLTIP_PORCENTAJE, textoCentro: { principal: tasa + '%', secundario: 'cerrados' } }
+                }
             });
 
             // 4. Casos por Operador — BARRAS HORIZONTALES
@@ -549,9 +1063,40 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     indexAxis: 'y',
-                    plugins: { legend: { display: false } },
-                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+                    layout: { padding: { right: 28 } },
+                    plugins: { legend: { display: false }, valoresEnBarras: { activo: true } },
+                    scales: { x: { beginAtZero: true, grace: '12%', ticks: { precision: 0 } } }
                 }
+            });
+        }
+
+        /* Flecha de variación frente al mes anterior (solo cuando hay un mes y un año elegidos) */
+        function actualizarDeltas(stats, anio, mes) {
+            const ids = ['deltaTotal', 'deltaValorizacion', 'deltaIncidente', 'deltaSinIncidente', 'deltaPendientes'];
+            if (anio === 'todos' || mes === 'todos') { ids.forEach(id => { document.getElementById(id).textContent = ''; }); return; }
+
+            let anioPrev = parseInt(anio, 10), mesPrev = parseInt(mes, 10) - 1;
+            if (mesPrev === 0) { mesPrev = 12; anioPrev -= 1; }
+            const prev = calcularEstadisticas(filtrarPorPeriodo(casosUnicosCache, String(anioPrev), String(mesPrev).padStart(2, '0')));
+            const nombrePrev = NOMBRES_MES[mesPrev - 1];
+
+            // sentido: 'neutro' (sube/baja no es ni bueno ni malo), 'sube-bien', 'sube-mal'
+            const metricas = [
+                ['deltaTotal', stats.totalCasos, prev.totalCasos, 'neutro', n => String(n)],
+                ['deltaValorizacion', stats.totalValorizacion, prev.totalValorizacion, 'neutro', n => 'S/ ' + Math.round(n).toLocaleString('es-PE')],
+                ['deltaIncidente', stats.casosConIncidente, prev.casosConIncidente, 'sube-mal', n => String(n)],
+                ['deltaSinIncidente', stats.casosSinIncidente, prev.casosSinIncidente, 'sube-bien', n => String(n)],
+                ['deltaPendientes', stats.casosPendientes, prev.casosPendientes, 'sube-mal', n => String(n)]
+            ];
+            metricas.forEach(([id, actual, anterior, sentido, fmt]) => {
+                const el = document.getElementById(id);
+                const dif = actual - anterior;
+                el.className = 'kpi-delta';
+                if (dif === 0) { el.textContent = `= igual que ${nombrePrev}`; el.classList.add('delta-neutro'); return; }
+                const sube = dif > 0;
+                el.textContent = `${sube ? '▲ +' : '▼ −'}${fmt(Math.abs(dif))} vs ${nombrePrev}`;
+                if (sentido === 'neutro') el.classList.add('delta-neutro');
+                else el.classList.add((sentido === 'sube-bien') === sube ? 'delta-bien' : 'delta-mal');
             });
         }
 
@@ -561,6 +1106,7 @@
                 'S/ ' + stats.totalValorizacion.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             document.getElementById('kpiConIncidente').textContent = stats.casosConIncidente;
             document.getElementById('kpiSinIncidente').textContent = stats.casosSinIncidente;
+            document.getElementById('kpiPendientes').textContent = stats.casosPendientes;
         }
 
         /* ---------- Detalle (tabla) ---------- */
@@ -568,7 +1114,7 @@
             const tbody = document.getElementById('tbodyCasos');
             tbody.innerHTML = '';
             if (lista.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="13" class="empty-state">No hay casos que coincidan con los filtros.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="14" class="empty-state">No hay casos que coincidan con los filtros.</td></tr>`;
                 return;
             }
             const permiteEdicion = !esLector();
@@ -577,7 +1123,7 @@
                 const etiquetaCT = esSolicitanteCT(c.solicitante) ? '<span class="badge-ct">CT</span>' : '';
                 tr.innerHTML = `
                     <td>${i + 1}</td>
-                    <td>${c.folio}</td>
+                    <td><span class="codigo">${c.folio}</span> ${etiquetaRespuesta(c.id)}</td>
                     <td>${c.descripcion_mercaderia}</td>
                     <td>S/ ${Number(c.precio_mercaderia).toFixed(2)}</td>
                     <td>${formatearFecha(c.fecha_solicitud)}</td>
@@ -585,6 +1131,7 @@
                     <td>${c.resolucion}</td>
                     <td>${c.detalle_resolucion || '—'}</td>
                     <td>${c.incidente_seguridad}</td>
+                    <td>${c.cerrado ? '<span class="badge-cerrado">🟢 Cerrado</span>' : '<span class="badge-pendiente">🟡 Pendiente</span>'}</td>
                     <td><span class="badge-files" role="button" tabindex="0" onclick="verResumenCaso(${c.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();verResumenCaso(${c.id})}">📄 Ver resumen</span></td>
                     <td>${c.operador}</td>
                     <td>${c.solicitante} ${etiquetaCT}</td>
@@ -593,6 +1140,7 @@
                             <button class="btn-sm btn-edit" onclick="editarCaso(${c.id})" aria-label="Editar caso">✏️</button>
                             <button class="btn-sm btn-delete" onclick="eliminarCaso(${c.id})" aria-label="Eliminar caso">🗑️</button>
                         ` : '<span class="texto-solo-lectura">Solo lectura</span>'}
+                        <button class="btn-sm btn-edit" onclick="verHistorialCaso(${c.id})" title="Ver historial de cambios" aria-label="Ver historial de cambios">📜</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -600,21 +1148,37 @@
         }
 
         function renderizarTablaDetalleFiltrada() {
-            const texto = document.getElementById('filtroTextoDetalle').value.toLowerCase().trim();
+            const texto = normalizarBusqueda(document.getElementById('filtroTextoDetalle').value);
             const resolucionFiltro = document.getElementById('filtroResolucionDetalle').value;
             const operadorFiltro = document.getElementById('filtroOperadorDetalle').value;
-            const anio = document.getElementById('filtroAnio').value;
+            const estadoFiltro = document.getElementById('filtroEstadoDetalle').value;
+            const tipoFiltro = document.getElementById('filtroTipoDetalle').value;
+            const { anio, mes } = leerPeriodo();
 
-            let lista = filtrarPorAnio(casosCache, anio);
+            let lista = filtrarPorPeriodo(casosCache, anio, mes);
             lista = lista.filter(c => {
-                const coincideTexto = !texto || [c.folio, c.descripcion_mercaderia, c.solicitante].join(' ').toLowerCase().includes(texto);
+                const coincideTexto = !texto || normalizarBusqueda([c.folio, c.descripcion_mercaderia, c.solicitante].join(' ')).includes(texto);
                 const coincideResolucion = resolucionFiltro === 'todas' || c.resolucion === resolucionFiltro;
                 const coincideOperador = operadorFiltro === 'todos' || c.operador === operadorFiltro;
-                return coincideTexto && coincideResolucion && coincideOperador;
+                const coincideEstado = estadoFiltro === 'todos' || (estadoFiltro === 'cerrado' ? c.cerrado : !c.cerrado);
+                const info = infoFolioPorId[c.id];
+                const esAmpliacion = !!info && info.orden > 1;
+                const coincideTipo = tipoFiltro === 'todos' || (tipoFiltro === 'ampliaciones' ? esAmpliacion : !esAmpliacion);
+                return coincideTexto && coincideResolucion && coincideOperador && coincideEstado && coincideTipo;
             });
 
             ultimaListaFiltrada = lista;
             renderizarTablaDetalle(lista);
+        }
+
+        function respaldoCCTV(boton) {
+            ejecutarRespaldo(boton, async () => {
+                const [casos, historial] = await Promise.all([listarCasosCCTV(), listarTodoHistorialCasosCCTV()]);
+                exportarRespaldoExcel('cctv', [
+                    { nombre: 'Casos', filas: casos },
+                    { nombre: 'Historial de cambios', filas: historial }
+                ]);
+            });
         }
 
         function exportarExcelCCTV() {
@@ -632,6 +1196,9 @@
                 'Resolución Final (link)': c.resolucion_final || '',
                 Operador: c.operador,
                 Solicitante: c.solicitante,
+                Respuesta: (infoFolioPorId[c.id] && infoFolioPorId[c.id].total > 1) ? (infoFolioPorId[c.id].orden === 1 ? 'Principal (cuenta)' : 'Ampliación ' + infoFolioPorId[c.id].orden) : 'Única',
+                Estado: c.cerrado ? 'Cerrado' : 'Pendiente',
+                'Motivo Pendiente': c.motivo_pendiente || '',
             }));
 
             const hoja = XLSX.utils.json_to_sheet(filas);
@@ -652,15 +1219,29 @@
         }
 
         function aplicarFiltrosYRenderizar() {
-            const anio = document.getElementById('filtroAnio').value;
-            const listaAnio = filtrarPorAnio(casosCache, anio);
-            actualizarKPIs(calcularEstadisticas(listaAnio));
-            renderizarGraficas(listaAnio);
+            const { anio, mes } = leerPeriodo();
+            // Estadísticas: un caso por folio (se cuenta solo la primera respuesta)
+            const listaPeriodo = filtrarPorPeriodo(casosUnicosCache, anio, mes);
+            const listaAnio = filtrarPorAnio(casosUnicosCache, anio);
+            const stats = calcularEstadisticas(listaPeriodo);
+            actualizarKPIs(stats);
+            actualizarDeltas(stats, anio, mes);
+            renderizarGraficas(listaPeriodo, listaAnio, stats);
             renderizarTablaDetalleFiltrada();
+            renderizarPendientes();
+            renderizarSeguimiento();
+
+            const registrosPeriodo = filtrarPorPeriodo(casosCache, anio, mes).length;
+            const ampliaciones = registrosPeriodo - listaPeriodo.length;
+            document.getElementById('notaConteoResumen').textContent = ampliaciones > 0
+                ? `Cada folio cuenta una sola vez (primera respuesta). ${ampliaciones} ampliación(es) de folios ya existentes no se suman a estos números; revísalas en "Varias respuestas".`
+                : 'Cada folio cuenta una sola vez (se toma su primera respuesta).';
         }
 
         async function cargarYRenderizarTodo() {
             casosCache = await listarCasosCCTV();
+            recalcularGruposFolio();
+            document.getElementById('ultimaActualizacion').textContent = `Datos al ${fechaHoraActualPeru()}`;
             poblarSelectorAnio(casosCache);
             aplicarFiltrosYRenderizar();
         }
@@ -670,7 +1251,7 @@
             if (!session) return;
             poblarSelectsEstaticos();
             actualizarDetalleOptions();
-            document.getElementById('fechaSolicitud').value = fechaHoyPeru();
+            resetearFormularioCaso();
             await cargarYRenderizarTodo();
         });
     </script>
